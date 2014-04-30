@@ -10,6 +10,7 @@
 #include <fstream>
 #include <cassert>
 #include <cstdlib>
+#include <algorithm>
 
 #include "ipa_parse.h"
 
@@ -69,7 +70,7 @@ ipa_key* get_full_family(ipa_key* rootnode, std::string family)
 	return key;
 }
 
-void create_keys(const char* fname)
+void init_keys(const char* fname)
 {
 	root = new ipa_key();
 	root->depth = 0;
@@ -107,6 +108,54 @@ void create_keys(const char* fname)
 			// Add character to the current ipa key
 			current->characters.push_back(line);
 	}
+}
+
+void destroy_key(ipa_key* key)
+{
+	for (auto k : key->children)
+		destroy_key(k);
+	delete key;
+}
+
+void destroy_keys()
+{
+	destroy_key(root);
+	root = nullptr;
+}
+
+void add_glyph(std::vector<glyph_t>& vec, const glyph_t& toadd)
+{
+	if (std::find(vec.begin(), vec.end(), toadd) == vec.end())
+	{
+		auto siz = vec.size();
+		bool inserted = false;
+
+		for (size_t i = 0; i < siz; i++)
+			if (vec[i].size() < toadd.size())
+			{
+				vec.insert(vec.begin() + i, toadd);
+				inserted = true;
+				break;
+			}
+
+		if (!inserted)
+			vec.push_back(toadd);
+	}
+}
+void add_key_glyphs(std::vector<glyph_t>& vec, ipa_key* key)
+{
+	for (auto a : key->children)
+		add_key_glyphs(vec, a);
+
+	for (const auto& a : key->characters)
+		add_glyph(vec, a);
+}
+
+std::vector<glyph_t> sorted_keys()
+{
+	std::vector<glyph_t> ret;
+	add_key_glyphs(ret, root);
+	return ret;
 }
 
 }/* namespace ipa */

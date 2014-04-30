@@ -5,10 +5,16 @@
  *      Author: skim
  */
 
+#include <iostream>
 #include "ipa_parse.h"
 
 int main()
 {
-	ipa::create_keys("res/ipa_dict");
+	ipa::init_keys("res/ipa_dict");
+
+	for (const auto& a : ipa::sorted_keys())
+		std::cout << a << " : " << a.size() << "\n";
+
+	ipa::destroy_keys();
 }
 

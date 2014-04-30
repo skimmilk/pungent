@@ -13,6 +13,8 @@
 
 namespace ipa{
 
+typedef std::string glyph_t;
+
 struct ipa_key
 {
 	std::string key;
@@ -20,13 +22,21 @@ struct ipa_key
 	ipa_key* parent;
 	std::vector<ipa_key*> children;
 	float dissimilarity;
-	std::vector<std::string> characters;
+	std::vector<glyph_t> characters;
 	// The difference in index in children vector implies their similarity
 	bool index_similar;
 };
 
-extern ipa_key* root;
-void create_keys(const char* fname);
+// Initializes the IPA list, loading file fname
+void init_keys(const char* fname);
+void destroy_keys();
+
+// Returns a vector of glyphs sorted by size
+std::vector<glyph_t> sorted_keys();
+
+// Returns the difference between two glyphs
+// Ranges from 1 to 0
+float glyph_diff(glyph_t, glyph_t);
 
 }
 
