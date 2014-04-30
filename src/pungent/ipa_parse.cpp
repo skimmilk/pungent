@@ -123,6 +123,64 @@ void destroy_keys()
 	root = nullptr;
 }
 
+std::string glyph_strip(const std::string& glyphs)
+{
+	// Strip stresses and unusable characters
+	std::vector<glyph_t> unusable { "ˈ","ː","ˑ",".","(",")"};
+	std::string tmp = glyphs;
+	std::string result;
+	while (true)
+	{
+		bool switched = false;
+		for (const glyph_t& a : unusable)
+		{
+			if (!tmp.size())
+				return result;
+			if (tmp.compare(0, a.size(), a) == 0)
+			{
+				switched = true;
+				tmp = tmp.substr(a.size());
+			}
+		}
+
+		// Advance
+		if (!switched)
+		{
+			result += tmp[0];
+			tmp = tmp.substr(1);
+		}
+	}
+	return result;
+}
+bool glyph_next(const std::vector<glyph_t>& glyphs,
+		std::string& str, glyph_t& glyph)
+{
+	if (str.size() == 0)
+		return false;
+
+	for (const glyph_t& a : glyphs)
+	{
+		if (str.compare(0, a.size(), a) == 0)
+		{
+			glyph = a;
+			str = str.substr(a.size());
+			return true;
+		}
+	}
+	throw std::runtime_error("Unknown glyphs in: " + str);
+}
+gstring glyph_str(std::string str)
+{
+	gstring result;
+	glyph_t glyph;
+	std::vector<glyph_t> sorted_size = sorted_keys();
+
+	while (glyph_next(sorted_size, str, glyph))
+		result.push_back(glyph);
+
+	return result;
+}
+
 void add_glyph(std::vector<glyph_t>& vec, const glyph_t& toadd)
 {
 	if (std::find(vec.begin(), vec.end(), toadd) == vec.end())
@@ -152,10 +210,10 @@ void add_key_glyphs(std::vector<glyph_t>& vec, ipa_key* key)
 }
 
 std::vector<glyph_t> sorted_keys()
-{
+		{
 	std::vector<glyph_t> ret;
 	add_key_glyphs(ret, root);
 	return ret;
-}
+		}
 
 }/* namespace ipa */

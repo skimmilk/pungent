@@ -14,6 +14,7 @@
 namespace ipa{
 
 typedef std::string glyph_t;
+typedef std::vector<glyph_t> gstring;
 
 struct ipa_key
 {
@@ -34,9 +35,14 @@ void destroy_keys();
 // Returns a vector of glyphs sorted by size
 std::vector<glyph_t> sorted_keys();
 
+// Strips invalid glyphs from the provided string
+std::string glyph_strip(const std::string&);
+// Produces a glyph string from a standard string with IPA characters
+gstring glyph_str(std::string);
+
 // Returns the difference between two glyphs
 // Ranges from 1 to 0
-float glyph_diff(glyph_t, glyph_t);
+float glyph_diff(const glyph_t&, const glyph_t&);
 
 }
 
