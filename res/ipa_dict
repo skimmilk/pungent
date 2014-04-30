@@ -1,3 +1,17 @@
+# Family are the tree nodes of the classes
+# manner:nasal
+# Manner is class, nasal is family
+
+# Describes how different a family and class of sounds sounds
+# Defaults all to 1
+# Children inherit their parent's dissimilarity values
+
+# First is class dissimilarity
+# Changing from manner:nasal to manner:plosive
+# Second is family dissimilarity
+# changing from m̥ to m from within manner:nasal
+
+@manner 1 .1
 :manner:nasal
 m̥
 m
@@ -87,6 +101,7 @@ r
 ɽ
 ɢ̆
 ʡ̯
+@manner:lateral .3 .1
 :manner:lateral:fric
 ɬ
 ɮ
@@ -105,6 +120,8 @@ l
 ɺ
 ɺ̠
 ʎ̯
+@place 1 .4
+@place:labial .7 .5
 :place:labial:bilabial
 m̥
 p
@@ -123,6 +140,7 @@ v
 ⱱ
 :place:labial:velar
 w
+@place:coronal .7 .5
 :place:coronal:dental
 n̪
 t̪
@@ -145,6 +163,7 @@ l
 ɺ
 t͡s
 d͡z
+@place:coronal .7 .5
 :place:coronal:postlav:postlav_
 n̠
 ʃ
@@ -164,6 +183,7 @@ d͡ʒ
 ˔̊
 ɭ
 ɺ̠
+@place:dorsal .7 .5
 :place:dorsal:palatal
 ɲ̥
 ɲ
@@ -196,6 +216,7 @@ q
 ʁ
 ʀ
 ɢ̆
+@place:radical .5 .3
 :place:radical:pharyngeal
 ħ
 ʕ
@@ -209,6 +230,7 @@ q
 ʔ
 h
 ɦ
+@voicing 1 .8
 :voicing:unvoiced
 m̥
 p
@@ -298,6 +320,9 @@ g
 ʡ̯
 ɦ
 w
+@backness 1 .1
+# A star means the children families are similar based on their closeness
+*backness
 :backness:front
 i
 y
@@ -338,6 +363,8 @@ o̞
 ɔ
 ɑ
 ɒ
+@height 1 .05
+*height
 :height:high_close
 i
 y
@@ -380,6 +407,7 @@ a
 ä
 ɑ
 ɒ
+@roundedness 1 .6
 :roundedness:unrounded
 i
 ɨ

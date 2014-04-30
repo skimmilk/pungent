@@ -2,5 +2,5 @@
 .project
 .release_time
 .settings/
-.bin
+bin
 build
