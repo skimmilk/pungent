@@ -22,11 +22,13 @@ struct ipa_key
 	int depth;
 	ipa_key* parent;
 	std::vector<ipa_key*> children;
-	float dissimilarity;
+	float fam_dissimilarity;
+	float class_dissimilarity;
 	std::vector<glyph_t> characters;
 	// The difference in index in children vector implies their similarity
 	bool index_similar;
 };
+extern ipa_key* root;
 
 // Initializes the IPA list, loading file fname
 void init_keys(const char* fname);
@@ -35,14 +37,11 @@ void destroy_keys();
 // Returns a vector of glyphs sorted by size
 std::vector<glyph_t> sorted_keys();
 
-// Strips invalid glyphs from the provided string
+// Strips useless valid IPA glyphs from the provided string
 std::string glyph_strip(const std::string&);
 // Produces a glyph string from a standard string with IPA characters
 gstring glyph_str(std::string);
 
-// Returns the difference between two glyphs
-// Ranges from 1 to 0
-float glyph_diff(const glyph_t&, const glyph_t&);
 
 }
 

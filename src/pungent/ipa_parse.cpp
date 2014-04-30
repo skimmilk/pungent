@@ -31,7 +31,8 @@ ipa_key* get_family(ipa_key* current, const std::string& family)
 	ret->depth = current->depth + 1;
 	ret->key = family;
 	ret->parent = current;
-	ret->dissimilarity = current->dissimilarity;
+	ret->class_dissimilarity = current->class_dissimilarity;
+	ret->fam_dissimilarity = current->fam_dissimilarity;
 	ret->index_similar = current->index_similar;
 	current->children.push_back(ret);
 	return ret;
@@ -74,7 +75,8 @@ void init_keys(const char* fname)
 {
 	root = new ipa_key();
 	root->depth = 0;
-	root->dissimilarity = 1.f;
+	root->class_dissimilarity = 1.f;
+	root->fam_dissimilarity = 1.f;
 	root->index_similar = false;
 
 	ipa_key* current = 0;
@@ -89,15 +91,29 @@ void init_keys(const char* fname)
 			current = get_full_family(root, line);
 		else if (line[0] == '@')
 		{
-			line = line.substr(1);
+			std::string tmp = line.substr(1);
 
-			size_t found = line.find(' ');
-			assert(found != line.npos);
+			size_t found = tmp.find(' ');
+			if (found == line.npos)
+				throw std::runtime_error("Invalid line: " + line);
 
-			std::string classname (line.substr(0, found));
-			float dissimilarity = atof(line.substr(found + 1).c_str());
+			std::string classname (tmp.substr(0, found));
+			tmp = tmp.substr(found + 1);
+
+			found = tmp.find(' ');
+			if (found == line.npos)
+				throw std::runtime_error("Invalid line: " + line);
+
+			// contains two floats
+			if (found == line.npos)
+				throw std::runtime_error("Invalid line: " + line);
+
+			float class_dissimilar = atof(tmp.substr(0, found).c_str());
+			float fam_dissimilar = atof(tmp.substr(found + 1).c_str());
+
 			ipa_key* family = get_full_family(root, classname);
-			family->dissimilarity = dissimilarity;
+			family->class_dissimilarity = class_dissimilar;
+			family->fam_dissimilarity = fam_dissimilar;
 		}
 		else if (line[0] == '*')
 		{
@@ -108,6 +124,7 @@ void init_keys(const char* fname)
 			// Add character to the current ipa key
 			current->characters.push_back(line);
 	}
+	root->class_dissimilarity = 2.f;
 }
 
 void destroy_key(ipa_key* key)
@@ -126,7 +143,7 @@ void destroy_keys()
 std::string glyph_strip(const std::string& glyphs)
 {
 	// Strip stresses and unusable characters
-	std::vector<glyph_t> unusable { "ˈ","ː","ˑ",".","(",")"};
+	std::vector<glyph_t> unusable { "ˈ","ː","ˑ",".","(",")","'","ˌ"};
 	std::string tmp = glyphs;
 	std::string result;
 	while (true)
@@ -210,10 +227,10 @@ void add_key_glyphs(std::vector<glyph_t>& vec, ipa_key* key)
 }
 
 std::vector<glyph_t> sorted_keys()
-		{
+{
 	std::vector<glyph_t> ret;
 	add_key_glyphs(ret, root);
 	return ret;
-		}
+}
 
 }/* namespace ipa */
