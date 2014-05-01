@@ -87,12 +87,15 @@ void init_keys(const char* fname)
 	{
 		if (line.size() == 0 || line[0] == '#')
 			continue;
+		// Reading :class:name
 		else if (line[0] == ':')
 			current = get_full_family(root, line);
+		// Reading @class:name:thing 1.0 0.1
 		else if (line[0] == '@')
 		{
 			std::string tmp = line.substr(1);
 
+			// Space delimits class name and numbers
 			size_t found = tmp.find(' ');
 			if (found == line.npos)
 				throw std::runtime_error("Invalid line: " + line);
@@ -104,10 +107,7 @@ void init_keys(const char* fname)
 			if (found == line.npos)
 				throw std::runtime_error("Invalid line: " + line);
 
-			// contains two floats
-			if (found == line.npos)
-				throw std::runtime_error("Invalid line: " + line);
-
+			// String should contain two floats
 			float class_dissimilar = atof(tmp.substr(0, found).c_str());
 			float fam_dissimilar = atof(tmp.substr(found + 1).c_str());
 
@@ -115,6 +115,7 @@ void init_keys(const char* fname)
 			family->class_dissimilarity = class_dissimilar;
 			family->fam_dissimilarity = fam_dissimilar;
 		}
+		// Reading *class:name
 		else if (line[0] == '*')
 		{
 			std::string classname = line.substr(1);

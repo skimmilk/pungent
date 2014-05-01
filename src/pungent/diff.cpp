@@ -5,9 +5,44 @@
  *      Author: skim
  */
 
-#include "ipa_parse.h"
+#include "diff.h"
 
 namespace ipa{
+
+// http://en.wikipedia.org/wiki/Levenshtein_distance
+float glyphstring_diff(const gstring& a, const gstring& b)
+{
+	if (a == b || !a.size() || !b.size())
+		return 0.f;
+
+	std::vector<float> prev_dist, cur_dist;
+	cur_dist.resize(b.size() + 1);
+	prev_dist.resize(b.size() + 1);
+
+	// Init the previous row of distances
+	int index = 0;
+	for (auto& f : prev_dist) f = index++;
+
+	int asize = a.size(), bsize = b.size();
+	for (int i_a = 0; i_a < asize; i_a++)
+	{
+		// Calculate current row distance from previous row prev_dist
+		cur_dist[0] = i_a + 1;
+
+		for (int i_b = 0; i_b < bsize; i_b++)
+		{
+			float cost = glyph_diff(a[i_a], b[i_b]);
+			cur_dist[i_b + 1] = std::min(
+					std::min(cur_dist[i_b] + 1.f, prev_dist[i_b + 1] + 1.f),
+					prev_dist[i_b] + cost);
+		}
+
+		// Copy current distance row into previous row
+		prev_dist = cur_dist;
+	}
+
+	return cur_dist[b.size()];
+}
 
 void glyph_classes(std::vector<ipa_key*>& classes, ipa_key* key, const glyph_t& glyph)
 {

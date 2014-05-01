@@ -15,6 +15,8 @@ namespace ipa {
 // Returns the difference between two glyphs
 // Ranges from 1 to 0
 float glyph_diff(const glyph_t&, const glyph_t&);
+// Returns how different a string of glyph sounds
+float glyphstring_diff(const gstring&, const gstring&);
 
 } /* namespace ipa */
 
