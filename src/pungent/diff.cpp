@@ -41,7 +41,7 @@ float glyphstring_diff(const gstring& a, const gstring& b)
 		prev_dist = cur_dist;
 	}
 
-	return cur_dist[b.size()];
+	return cur_dist[b.size()] / std::min(b.size(), a.size());
 }
 
 void glyph_classes(std::vector<ipa_key*>& classes, ipa_key* key, const glyph_t& glyph)

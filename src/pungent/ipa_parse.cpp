@@ -144,7 +144,7 @@ void destroy_keys()
 std::string glyph_strip(const std::string& glyphs)
 {
 	// Strip stresses and unusable characters
-	std::vector<glyph_t> unusable { "ˈ","ː","ˑ",".","(",")","'","ˌ"};
+	std::vector<glyph_t> unusable {"-", "̩", "ˈ","ː","ˑ",".","(",")","'","ˌ"};
 	std::string tmp = glyphs;
 	std::string result;
 	while (true)
