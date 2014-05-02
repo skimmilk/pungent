@@ -14,9 +14,13 @@
 void test_glyphs();
 void test_dict();
 
-int main()
+int main(int argc, char**)
 {
-	test_dict();
+	// Just put an argument into the command line to test dictionary
+	if (argc == 1)
+		test_glyphs();
+	else
+		test_dict();
 	return 0;
 }
 

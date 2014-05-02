@@ -5,6 +5,7 @@
  *      Author: skim
  */
 
+#include <math.h>
 #include "diff.h"
 
 namespace ipa{
@@ -80,6 +81,18 @@ ipa_key* go_up(ipa_key* child, int upness)
 		else return nullptr;
 	return parent;
 }
+int indexof(ipa_key* child)
+{
+	int result = 0;
+
+	for (auto c : child->parent->children)
+		if (c == child)
+			return result;
+		else
+			result++;
+
+	throw;
+}
 bool tree_diff(ipa_key* t1, ipa_key* t2, float& result)
 {
 	// Find least-distant cousin
@@ -107,7 +120,11 @@ bool tree_diff(ipa_key* t1, ipa_key* t2, float& result)
 		}
 		if (t1->parent == t2->parent)
 		{
-			result += t1->parent->class_dissimilarity;
+			if (t1->index_similar)
+				result += t1->parent->fam_dissimilarity *
+					std::max(1., fabs((float)indexof(t1)*(float)indexof(t2)));
+			else
+				result += t1->parent->class_dissimilarity;
 			return true;
 		}
 

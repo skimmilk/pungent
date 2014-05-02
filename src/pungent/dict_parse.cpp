@@ -20,7 +20,7 @@ struct dict_entry
 	std::vector<ipa::gstring> ipa;
 };
 
-// Global
+// Static dictionary of words only this file can access
 std::vector<dict_entry>* entries;
 
 bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
