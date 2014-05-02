@@ -9,8 +9,45 @@
 #include <cstdlib>
 #include "ipa_parse.h"
 #include "diff.h"
+#include "dict_parse.h"
+
+void test_glyphs();
+void test_dict();
 
 int main()
+{
+	test_dict();
+	return 0;
+}
+
+void test_dict()
+{
+	ipa::init_keys("res/ipa_dict");
+	std::cout << "Loading dictionary...\n";
+	dict::init_dict("res/wordlist2");
+	std::cout << "Done\n\n";
+
+	std::string line;
+	while (std::getline(std::cin, line))
+	{
+		std::vector<ipa::gstring> prns;
+		if (dict::search(line, prns))
+			for (const auto& glyphstr : prns)
+			{
+				for (const auto& glyph : glyphstr)
+					std::cout << glyph;
+				std::cout << "\n";
+			}
+		else
+			std::cout << "(not found)\n";
+
+		std::cout << "\n";
+	}
+
+	dict::destroy_dict();
+	ipa::destroy_keys();
+}
+void test_glyphs()
 {
 	ipa::init_keys("res/ipa_dict");
 
@@ -42,7 +79,6 @@ int main()
 		if (pos == a.npos)
 		{
 			std::cout << a.size() << "\n";
-			a = ipa::glyph_strip(a);
 			auto gstr = ipa::glyph_str(a);
 
 			for (const auto& res : gstr)
@@ -71,6 +107,5 @@ int main()
 	}
 
 	ipa::destroy_keys();
-	return 0;
 }
 

@@ -59,14 +59,11 @@ ipa_key* get_full_family(ipa_key* rootnode, std::string family)
 			key = get_family(key, family);
 			break;
 		}
-		else
-		{
-			current = family.substr(0, found);
-			// Turn class:example:another into example:other
-			family = family.substr(found + 1);
+		current = family.substr(0, found);
+		// Turn class:example:another into example:other
+		family = family.substr(found + 1);
 
-			key = get_family(key, current);
-		}
+		key = get_family(key, current);
 	}
 	return key;
 }
@@ -170,8 +167,12 @@ std::string glyph_strip(const std::string& glyphs)
 	}
 	return result;
 }
+// Puts the next recognizable glyph from the string into glyph
+// Glyphs is the array of recognizable glyphs sorted by size
+// Failed is set if there is unrecognizable glyphs in the string
+// Returns true if there is more parsable glyphs in the string
 bool glyph_next(const std::vector<glyph_t>& glyphs,
-		std::string& str, glyph_t& glyph)
+		std::string& str, glyph_t& glyph, bool& failed)
 {
 	if (str.size() == 0)
 		return false;
@@ -185,18 +186,41 @@ bool glyph_next(const std::vector<glyph_t>& glyphs,
 			return true;
 		}
 	}
-	throw std::runtime_error("Unknown glyphs in: " + str);
+	failed = true;
+	return false;
 }
 gstring glyph_str(std::string str)
 {
 	gstring result;
 	glyph_t glyph;
+	// Glyphs sorted by size
 	std::vector<glyph_t> sorted_size = sorted_keys();
+	bool failed = false;
+	str = glyph_strip(str);
 
-	while (glyph_next(sorted_size, str, glyph))
+	while (glyph_next(sorted_size, str, glyph, failed))
 		result.push_back(glyph);
 
+	if (failed)
+		throw std::runtime_error("Unknown glyphs in: " + str);
+
 	return result;
+}
+
+// Returns false if string contains unrecognizable glyphs
+// Keys need to be created with sorted_keys()
+// str is the string to look up
+bool glyph_try_str(std::vector<glyph_t> keys, std::string str, gstring& result)
+{
+	bool failed = false;
+	glyph_t glyph;
+
+	str = glyph_strip(str);
+
+	while (glyph_next(keys, str, glyph, failed))
+		result.push_back(glyph);
+
+	return !failed;
 }
 
 void add_glyph(std::vector<glyph_t>& vec, const glyph_t& toadd)

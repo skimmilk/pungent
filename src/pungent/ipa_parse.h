@@ -42,7 +42,11 @@ std::string glyph_strip(const std::string&);
 // Produces a glyph string from a standard string with IPA characters
 gstring glyph_str(std::string);
 
+// Returns false if string contains unrecognizable glyphs
+// Keys need to be created with sorted_keys()
+// str is the string to look up
+bool glyph_try_str(std::vector<glyph_t> keys, std::string str, gstring& result);
 
-}
+}/* namespace ipa */
 
 #endif /* IPA_PARSE_H_ */
