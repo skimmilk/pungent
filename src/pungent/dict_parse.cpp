@@ -103,6 +103,8 @@ bool init_dict(const char* fname, bool log)
 			break;
 
 		dict_entry current;
+		// Make word lowercase
+		std::transform(line.begin(), line.end(), line.begin(), tolower);
 		current.word = line;
 
 		// IPA pronunciation

@@ -33,7 +33,7 @@ typedef bool (*fn_callback_t)(const std::string&);
  *   false if an error occurred getting the pronunciation guide for one of
  *     the words
  */
-bool play(const std::string& sentence, float diff_max,
+bool play(std::string sentence, float diff_max,
 		fn_callback_t callback = _internal_print_pun);
 
 } /* namespace wordplay */

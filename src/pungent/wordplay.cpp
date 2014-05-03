@@ -5,6 +5,8 @@
  *      Author: skim
  */
 
+#include <algorithm>
+
 #include "wordplay.h"
 
 namespace wordplay{
@@ -46,9 +48,11 @@ bool get_glyph_string(const std::string& sentence,
 	}
 	return true;
 }
-bool play(const std::string& sentence, float diff_max,
+bool play(std::string sentence, float diff_max,
 		fn_callback_t callback)
 {
+	std::transform(sentence.begin(), sentence.end(), sentence.begin(), ::tolower);
+
 	std::vector< std::vector<ipa::gstring> > glyph_str;
 	if (!get_glyph_string(sentence, glyph_str))
 		return false;
@@ -61,8 +65,9 @@ bool play(const std::string& sentence, float diff_max,
 				std::cout << glyph;
 			std::cout << "\n";
 		}
-		std::cout << "\n\n";
+		std::cout << "\n";
 	}
+	std::cout << "\n";
 	return true;
 }
 bool init(const char* ipa_file, const char* words_file)
