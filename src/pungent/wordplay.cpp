@@ -8,14 +8,43 @@
 #include <algorithm>
 
 #include "wordplay.h"
+#include "diff.h"
 
 namespace wordplay{
+
+// Word pronunciations are a vector of glyph strings
+// It is getting hard to keep track of all these std::vectors,
+//   so typedef'ing them away makes the code much easier to read
+typedef std::vector<ipa::gstring> pronunciations_t;
+
+// Grab some of the next glyphs in the sentence
+// Randomly select pronunciations if there are multiple ones
+void leak(int num_glyphs, const std::vector<pronunciations_t>& words,
+		int& sentence_pos, int& word_pos, ipa::gstring& out)
+{
+	int pronunce_index = rand() % words[sentence_pos].size();
+	int grab_amt = std::min(num_glyphs, (int)words[sentence_pos][pronunce_index].size());
+	// Copy
+	for (int i = 0; i < grab_amt; i++)
+		out.push_back(
+				words[sentence_pos]
+				      [pronunce_index]
+				       [word_pos++]);
+
+	// Grab more glyphs from the next word if we need to
+	if (grab_amt < num_glyphs && sentence_pos != (int)words.size() - 1)
+		leak(num_glyphs - grab_amt, words, ++sentence_pos, word_pos = 0, out);
+}
+
+// Go through the list of words
+// See if it fits well at the start of the sentence
+// Continue on with the rest of the sentence
 
 // Turn sentence into a vector of glyph strings
 // Since each word can have multiple pronunciations,
 //  each word corresponds to a vector of glyph strings
 bool get_glyph_string(const std::string& sentence,
-		std::vector<std::vector<ipa::gstring>>& glyph_str)
+		std::vector<pronunciations_t>& glyph_str)
 {
 	std::string tmp = sentence;
 	while (1)
@@ -31,10 +60,10 @@ bool get_glyph_string(const std::string& sentence,
 			word = tmp.substr(0, i_space);
 
 		// Get pronunciations for current word
-		std::vector<ipa::gstring> pronunciations;
+		pronunciations_t pronunciations;
 		if (!dict::search(word, pronunciations) || !pronunciations.size())
 		{
-			std::cerr << "Could not find pronunciation for " << tmp << "\n";
+			std::cerr << "Could not find pronunciation for " << word << "\n";
 			// Could not find pronunciations
 			return false;
 		}
@@ -48,16 +77,9 @@ bool get_glyph_string(const std::string& sentence,
 	}
 	return true;
 }
-bool play(std::string sentence, float diff_max,
-		fn_callback_t callback)
+void explain_sentence(const std::vector<pronunciations_t>& sentence_pronuns)
 {
-	std::transform(sentence.begin(), sentence.end(), sentence.begin(), ::tolower);
-
-	std::vector< std::vector<ipa::gstring> > glyph_str;
-	if (!get_glyph_string(sentence, glyph_str))
-		return false;
-
-	for (const auto& word_pronuns : glyph_str)
+	for (const auto& word_pronuns : sentence_pronuns)
 	{
 		for (const auto& pronunciation : word_pronuns)
 		{
@@ -68,6 +90,28 @@ bool play(std::string sentence, float diff_max,
 		std::cout << "\n";
 	}
 	std::cout << "\n";
+
+	ipa::gstring a;
+	int c = 0, d = 0;
+	leak(5, sentence_pronuns, c, d, a);
+	for (const auto& glyphs : a)
+		std::cout << glyphs;
+	std::cout << "\n\n";
+
+}
+bool play(std::string sentence, float diff_max,
+		fn_callback_t callback, bool do_test)
+{
+	// Lower-case-ify string
+	std::transform(sentence.begin(), sentence.end(), sentence.begin(), ::tolower);
+
+	// Get the pronunciations of all words in the sentence
+	std::vector<pronunciations_t> sentence_pronuns;
+	if (!get_glyph_string(sentence, sentence_pronuns))
+		return false;
+
+	if (do_test)
+		explain_sentence(sentence_pronuns);
 	return true;
 }
 bool init(const char* ipa_file, const char* words_file)

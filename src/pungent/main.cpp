@@ -19,13 +19,13 @@ void test_pun();
 int main(int argc, char**)
 {
 	// Just put an argument into the command line to test dictionary
-	// Overload command with 2 arguments to test pun generator
+	// Overload command with 2 arguments to test glyphs
 	if (argc == 1)
-		test_glyphs();
+		test_pun();
 	else if (argc == 2)
 		test_dict();
 	else
-		test_pun();
+		test_glyphs();
 	return 0;
 }
 
@@ -51,12 +51,19 @@ void test_pun()
 	}
 	std::cerr << "Done\n\n";
 
+	srand(time(0));
+
+	wordplay::play("We conjure the spirits of our computer with our spells",
+			0.33, print_pun, true);
+
 	std::string line;
 	while (std::getline(std::cin, line))
 	{
-		if (!wordplay::play(line, 0.33))
+		if (!wordplay::play(line, 0.33, print_pun, false))
 			std::cout << "Couldn't find a pronunciation for one of the words\n";
 	}
+
+	wordplay::destroy();
 }
 void test_dict()
 {
