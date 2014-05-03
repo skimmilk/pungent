@@ -74,7 +74,8 @@ bool gen_pun(const std::vector<pronunciations_t>& sentence, int& sentence_pos,
 		sentence_pos = prev_spos;
 		word_pos = prev_wpos;
 	}
-	if ((int)sentence[0].size() - 2 <= word_pos)
+	if (sentence_pos + 1 >= (int)sentence.size() &&
+			word_pos >= (int)sentence[sentence_pos].size())
 		// close enough
 		return true;
 	return false;
@@ -153,12 +154,20 @@ bool play(std::string sentence, float diff_max,
 		explain_sentence(sentence_pronuns);
 
 	int i_sentence = 0, i_word = 0;
+	int retries = 0;
 	std::string pun;
-	while (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max, pun) &&
-			callback(pun))
+
+	while (retries++ < 5)
 	{
-		i_sentence = i_word = 0;
-		pun = "";
+		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max, pun))
+		{
+			if (!callback(pun))
+				return true;
+			i_sentence = i_word = 0;
+			pun = "";
+			retries = 0;
+		}
+		else retries++;
 	}
 
 	return true;
