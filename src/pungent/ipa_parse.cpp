@@ -68,7 +68,7 @@ ipa_key* get_full_family(ipa_key* rootnode, std::string family)
 	return key;
 }
 
-void init_keys(const char* fname)
+bool init_keys(const char* fname)
 {
 	root = new ipa_key();
 	root->depth = 0;
@@ -80,6 +80,8 @@ void init_keys(const char* fname)
 	std::ifstream file (fname);
 	std::string line;
 
+	if (file.bad())
+		return false;
 	while (std::getline(file, line))
 	{
 		if (line.size() == 0 || line[0] == '#')
@@ -122,7 +124,8 @@ void init_keys(const char* fname)
 			// Add character to the current ipa key
 			current->characters.push_back(line);
 	}
-	root->class_dissimilarity = 2.f;
+	root->class_dissimilarity = 1.5f;
+	return true;
 }
 
 void destroy_key(ipa_key* key)

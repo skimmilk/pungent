@@ -10,20 +10,54 @@
 #include "ipa_parse.h"
 #include "diff.h"
 #include "dict_parse.h"
+#include "wordplay.h"
 
 void test_glyphs();
 void test_dict();
+void test_pun();
 
 int main(int argc, char**)
 {
 	// Just put an argument into the command line to test dictionary
+	// Overload command with 2 arguments to test pun generator
 	if (argc == 1)
 		test_glyphs();
-	else
+	else if (argc == 2)
 		test_dict();
+	else
+		test_pun();
 	return 0;
 }
 
+bool print_pun(const std::string& str)
+{
+	static int times = 0;
+
+	std::cout << str << "\n";
+	if (++times == 10)
+	{
+		times = 0;
+		return false;
+	}
+	return true;
+}
+void test_pun()
+{
+	std::cerr << "Loading dictionary...\n";
+	if (!wordplay::init("res/ipa_dict", "res/wordlist2"))
+	{
+		std::cerr << "Error loading files\n";
+		return;
+	}
+	std::cerr << "Done\n\n";
+
+	std::string line;
+	while (std::getline(std::cin, line))
+	{
+		if (!wordplay::play(line, 0.33))
+			std::cout << "Couldn't find a pronunciation for one of the words\n";
+	}
+}
 void test_dict()
 {
 	ipa::init_keys("res/ipa_dict");

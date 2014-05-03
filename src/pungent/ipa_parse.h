@@ -31,7 +31,7 @@ struct ipa_key
 extern ipa_key* root;
 
 // Initializes the IPA list, loading file fname
-void init_keys(const char* fname);
+bool init_keys(const char* fname);
 void destroy_keys();
 
 // Returns a vector of glyphs sorted by size
