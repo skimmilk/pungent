@@ -53,14 +53,18 @@ void test_pun()
 
 	srand(time(0));
 
+	std::cout << "Testing pun...\n";
 	wordplay::play("We conjure the spirits of our computer with our spells",
-			0.33, print_pun, true);
+			0.25, print_pun, true);
+	std::cout << "Done\n";
 
 	std::string line;
 	while (std::getline(std::cin, line))
 	{
-		if (!wordplay::play(line, 0.33, print_pun, false))
+		std::cerr << "Playing with words...\n";
+		if (!wordplay::play(line, 0.2, print_pun, false))
 			std::cout << "Couldn't find a pronunciation for one of the words\n";
+		std::cerr << "Done\n\n";
 	}
 
 	wordplay::destroy();

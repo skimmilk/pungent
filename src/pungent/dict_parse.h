@@ -12,6 +12,12 @@
 
 namespace dict{
 
+struct dict_entry
+{
+	std::string word;
+	std::vector<ipa::gstring> ipa;
+};
+
 // Initialize the dictionary
 bool init_dict(const char* fname, bool logerr = false);
 void destroy_dict();
@@ -19,6 +25,8 @@ void destroy_dict();
 // Search the dictionary for string, put found IPA pronunciations into vector
 // Returns true if the word has pronunciation guide
 bool search(const std::string&, std::vector<ipa::gstring>&);
+
+const dict_entry& random_word();
 
 } /* namespace wik */
 

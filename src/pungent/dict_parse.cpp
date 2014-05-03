@@ -14,14 +14,13 @@
 
 namespace dict{
 
-struct dict_entry
-{
-	std::string word;
-	std::vector<ipa::gstring> ipa;
-};
-
 // Static dictionary of words only this file can access
 std::vector<dict_entry>* entries;
+
+const dict_entry& random_word()
+{
+	return entries->at(rand() % entries->size());
+}
 
 bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
 {
@@ -30,7 +29,7 @@ bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
 	bool stripped_s = false;
 	std::string tmp = word;
 	retry:
-	for (const auto& a : *entries)
+	for (const dict_entry& a : *entries)
 		if (tmp == a.word)
 		{
 			pronunciation = a.ipa;

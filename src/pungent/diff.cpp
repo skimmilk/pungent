@@ -13,8 +13,10 @@ namespace ipa{
 // http://en.wikipedia.org/wiki/Levenshtein_distance
 float glyphstring_diff(const gstring& a, const gstring& b)
 {
-	if (a == b || !a.size() || !b.size())
+	if (a == b)
 		return 0.f;
+	if (!a.size() || !b.size())
+		return 1.f;
 
 	std::vector<float> prev_dist, cur_dist;
 	cur_dist.resize(b.size() + 1);

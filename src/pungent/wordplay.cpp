@@ -23,7 +23,8 @@ void leak(int num_glyphs, const std::vector<pronunciations_t>& words,
 		int& sentence_pos, int& word_pos, ipa::gstring& out)
 {
 	int pronunce_index = rand() % words[sentence_pos].size();
-	int grab_amt = std::min(num_glyphs, (int)words[sentence_pos][pronunce_index].size());
+
+	int grab_amt = std::min(num_glyphs, (int)words[sentence_pos][pronunce_index].size() - word_pos);
 	// Copy
 	for (int i = 0; i < grab_amt; i++)
 		out.push_back(
@@ -33,12 +34,51 @@ void leak(int num_glyphs, const std::vector<pronunciations_t>& words,
 
 	// Grab more glyphs from the next word if we need to
 	if (grab_amt < num_glyphs && sentence_pos != (int)words.size() - 1)
-		leak(num_glyphs - grab_amt, words, ++sentence_pos, word_pos = 0, out);
+	{
+		word_pos = 0;
+		leak(num_glyphs - grab_amt, words, ++sentence_pos, word_pos, out);
+	}
 }
 
 // Go through the list of words
 // See if it fits well at the start of the sentence
 // Continue on with the rest of the sentence
+bool gen_pun(const std::vector<pronunciations_t>& sentence, int& sentence_pos,
+		int& word_pos, const float& max_diff, std::string& output)
+{
+	if (sentence_pos >= (int)sentence.size())
+		return true;
+	const int max_tries = 5000;
+	int i = 0;
+
+	int prev_spos = sentence_pos;
+	int prev_wpos = word_pos;
+	while (i++ < max_tries)
+	{
+		// Insert a word and see if it fits into the sentence well
+		const dict::dict_entry& random_word = dict::random_word();
+		const ipa::gstring& random_pronun =
+				random_word.ipa[rand() % random_word.ipa.size()];
+
+		if (random_pronun.size() == 0)
+			continue;
+
+		ipa::gstring sentence_part;
+		leak(random_pronun.size(), sentence, sentence_pos, word_pos, sentence_part);
+
+		if (ipa::glyphstring_diff(random_pronun, sentence_part) < max_diff)
+		{
+			output += random_word.word + " ";
+			return gen_pun(sentence, sentence_pos, word_pos, max_diff, output);
+		}
+		sentence_pos = prev_spos;
+		word_pos = prev_wpos;
+	}
+	if ((int)sentence[0].size() - 2 <= word_pos)
+		// close enough
+		return true;
+	return false;
+}
 
 // Turn sentence into a vector of glyph strings
 // Since each word can have multiple pronunciations,
@@ -93,11 +133,10 @@ void explain_sentence(const std::vector<pronunciations_t>& sentence_pronuns)
 
 	ipa::gstring a;
 	int c = 0, d = 0;
-	leak(5, sentence_pronuns, c, d, a);
+	leak(50, sentence_pronuns, c, d, a);
 	for (const auto& glyphs : a)
 		std::cout << glyphs;
 	std::cout << "\n\n";
-
 }
 bool play(std::string sentence, float diff_max,
 		fn_callback_t callback, bool do_test)
@@ -112,6 +151,16 @@ bool play(std::string sentence, float diff_max,
 
 	if (do_test)
 		explain_sentence(sentence_pronuns);
+
+	int i_sentence = 0, i_word = 0;
+	std::string pun;
+	while (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max, pun) &&
+			callback(pun))
+	{
+		i_sentence = i_word = 0;
+		pun = "";
+	}
+
 	return true;
 }
 bool init(const char* ipa_file, const char* words_file)
