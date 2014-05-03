@@ -25,12 +25,27 @@ std::vector<dict_entry>* entries;
 
 bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
 {
+	// If the word ends in an 's', the word might be pluralized
+	//  so we won't find it because pluralized word aren't in the dictionary
+	bool stripped_s = false;
+	std::string tmp = word;
+	retry:
 	for (const auto& a : *entries)
-		if (word == a.word)
+		if (tmp == a.word)
 		{
 			pronunciation = a.ipa;
+			// Tach on 's' sound to pronunciation if we've stripped the s
+			if (stripped_s)
+				for (auto& a : pronunciation)
+					a.push_back("s");
 			return true;
 		}
+	if (!stripped_s && word.size() && word[word.size() - 1] == 's')
+	{
+		tmp.pop_back();
+		stripped_s = true;
+		goto retry;
+	}
 	return false;
 }
 void add_ipa(const std::vector<ipa::glyph_t>& glyphs,
