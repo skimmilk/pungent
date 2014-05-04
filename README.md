@@ -32,7 +32,9 @@ Pungent checks how similar words and sentences sound with above, if the IPA glyp
 To generate wordplay based on a given input sentence, the program looks up its IPA spellings, then incrementally adds random words that sound similar to the input, till the sentence is fully built and you get a shitty pun.
 #### License
 Everything in src/ is GPLv3
+
 Everything in res/ is licensed under GNU Free Documentation License v1.3
+
 Check COPYING for explanations
 
 
