@@ -54,8 +54,7 @@ void test_pun()
 	srand(time(0));
 
 	std::cout << "Testing pun...\n";
-	wordplay::play("We conjure the spirits of our computer with our spells",
-			0.06, print_pun, true);
+	wordplay::play("technology", 0.06, print_pun, true);
 	std::cout << "Done\n";
 
 	std::string line;
