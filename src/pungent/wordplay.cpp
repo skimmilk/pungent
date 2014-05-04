@@ -48,7 +48,7 @@ bool gen_pun(const std::vector<pronunciations_t>& sentence, int& sentence_pos,
 {
 	if (sentence_pos >= (int)sentence.size())
 		return true;
-	const int max_tries = 5000;
+	const int max_tries = 10000;
 	int i = 0;
 
 	int prev_spos = sentence_pos;
@@ -157,7 +157,7 @@ bool play(std::string sentence, float diff_max,
 	int retries = 0;
 	std::string pun;
 
-	while (retries++ < 5)
+	while (retries++ < 15)
 	{
 		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max, pun))
 		{
@@ -167,7 +167,11 @@ bool play(std::string sentence, float diff_max,
 			pun = "";
 			retries = 0;
 		}
-		else retries++;
+		else
+		{
+			retries++;
+			diff_max += 0.01;
+		}
 	}
 
 	return true;

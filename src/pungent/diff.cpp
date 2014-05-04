@@ -124,7 +124,7 @@ bool tree_diff(ipa_key* t1, ipa_key* t2, float& result)
 		{
 			if (t1->index_similar)
 				result += t1->parent->fam_dissimilarity *
-					std::max(1., fabs((float)indexof(t1)*(float)indexof(t2)));
+					(1. + (float)abs(indexof(t1) - indexof(t2)));
 			else
 				result += t1->parent->class_dissimilarity;
 			return true;

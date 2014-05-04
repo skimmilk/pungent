@@ -62,7 +62,7 @@ void test_pun()
 	while (std::getline(std::cin, line))
 	{
 		std::cerr << "Playing with words...\n";
-		if (!wordplay::play(line, 0.1, print_pun, false))
+		if (!wordplay::play(line, 0.06, print_pun, false))
 			std::cout << "Couldn't find a pronunciation for one of the words\n";
 		std::cerr << "Done\n\n";
 	}
