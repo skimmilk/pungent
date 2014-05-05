@@ -12,6 +12,11 @@
 
 namespace ipa {
 
+// Initialize
+// Must be called only after the IPA dictionary has been loaded
+void init_diff();
+void destroy_diff();
+
 // Returns the difference between two glyphs
 // Ranges from 1 to 0
 float glyph_diff(const glyph_t&, const glyph_t&);

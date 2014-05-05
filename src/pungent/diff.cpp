@@ -6,9 +6,30 @@
  */
 
 #include <math.h>
+#include <algorithm>
 #include "diff.h"
 
 namespace ipa{
+
+struct glyph_differences
+{
+	glyph_t glyph;
+	std::vector<glyph_t> other_glyphs;
+	std::vector<float> differences;
+};
+
+std::vector<glyph_differences>* difference_table;
+void populate_diff_table();
+
+void init_diff()
+{
+	difference_table = new std::vector<glyph_differences>();
+	populate_diff_table();
+}
+void destroy_diff()
+{
+	delete difference_table;
+}
 
 // http://en.wikipedia.org/wiki/Levenshtein_distance
 float glyphstring_diff(const gstring& a, const gstring& b)
@@ -136,7 +157,7 @@ bool tree_diff(ipa_key* t1, ipa_key* t2, float& result)
 	}
 	return false;
 }
-float glyph_diff(const glyph_t& g1, const glyph_t& g2)
+float internal_glyph_diff(const glyph_t& g1, const glyph_t& g2)
 {
 	if (g1 == g2)
 		return 0.f;
@@ -159,6 +180,63 @@ float glyph_diff(const glyph_t& g1, const glyph_t& g2)
 		}
 
 	return diff;
+}
+
+void add_unique_glyphs(std::vector<glyph_t>& glyphs, ipa_key* key)
+{
+	for (const auto& g : key->characters)
+		if (std::find(glyphs.begin(), glyphs.end(), g) == glyphs.end())
+			glyphs.push_back(g);
+
+	for (auto child : key->children)
+		add_unique_glyphs(glyphs, child);
+}
+std::vector<glyph_t> unique_glyphs()
+{
+	std::vector<glyph_t> result;
+	add_unique_glyphs(result, ipa::root);
+	return result;
+}
+
+void populate_diff_table()
+{
+	auto glyphs = unique_glyphs();
+
+	// Go over every possible combination of two glyphs
+	for (auto thisglyph : glyphs)
+	{
+		glyph_differences diff;
+		diff.glyph = thisglyph;
+
+		for (auto other_glyph : glyphs)
+		{
+			diff.other_glyphs.push_back(other_glyph);
+			diff.differences.push_back(internal_glyph_diff(thisglyph, other_glyph));
+		}
+		difference_table->push_back(diff);
+	}
+}
+
+float glyph_diff(const glyph_t& g1, const glyph_t& g2)
+{
+	// Consult the lookup table for their differences
+	int i_g1 = 0;
+	for (const auto& a : *difference_table)
+		if (a.glyph == g1)
+			break;
+		else
+			i_g1++;
+
+	const auto& diffs = difference_table->at(i_g1);
+
+	int i_g2 = 0;
+	for (const auto& a : diffs.other_glyphs)
+		if (a == g2)
+			break;
+		else
+			i_g2++;
+
+	return diffs.differences[i_g2];
 }
 
 } /* namespace ipa */
