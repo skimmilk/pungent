@@ -36,7 +36,7 @@ bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
 			// Tach on 's' sound to pronunciation if we've stripped the s
 			if (stripped_s)
 				for (auto& a : pronunciation)
-					a.push_back("s");
+					a.push_back(ipa::glyph_char_hash("s"));
 			return true;
 		}
 	if (!stripped_s && word.size() && word[word.size() - 1] == 's')
@@ -47,8 +47,7 @@ bool search(const std::string& word, std::vector<ipa::gstring>& pronunciation)
 	}
 	return false;
 }
-void add_ipa(const std::vector<ipa::glyph_t>& glyphs,
-		dict_entry& current, std::string line, bool log)
+void add_ipa(dict_entry& current, std::string line, bool log)
 {
 	ipa::gstring result;
 
@@ -58,7 +57,7 @@ void add_ipa(const std::vector<ipa::glyph_t>& glyphs,
 		size_t found = line.find('|');
 		if (found == line.npos)
 		{
-			if (ipa::glyph_try_str(glyphs, line, result))
+			if (ipa::glyph_try_str(line, result))
 			{
 				if (result.size())
 					current.ipa.push_back(result);
@@ -69,7 +68,7 @@ void add_ipa(const std::vector<ipa::glyph_t>& glyphs,
 		}
 
 
-		if (ipa::glyph_try_str(glyphs, line.substr(0, found), result))
+		if (ipa::glyph_try_str(line.substr(0, found), result))
 			current.ipa.push_back(result);
 		else if (log)
 			std::cerr << line.substr(0, found) <<
@@ -82,8 +81,6 @@ bool init_dict(const char* fname, bool log)
 {
 	std::string line;
 	std::ifstream file (fname);
-
-	auto glyphs = ipa::sorted_keys();
 
 	if (file.bad())
 		return false;
@@ -110,7 +107,7 @@ bool init_dict(const char* fname, bool log)
 		if (!std::getline(file, line))
 			throw std::runtime_error("Unexpected EOF");
 
-		add_ipa(glyphs, current, line, log);
+		add_ipa(current, line, log);
 
 		// Type of word
 		if (!std::getline(file, line))

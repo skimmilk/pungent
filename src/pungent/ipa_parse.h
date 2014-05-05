@@ -13,7 +13,9 @@
 
 namespace ipa{
 
-typedef std::string glyph_t;
+// A glyph_t is a unique identifier for a glyph
+typedef uint64_t glyph_t;
+typedef std::string glyph_char_t;
 typedef std::vector<glyph_t> gstring;
 
 struct ipa_key
@@ -25,6 +27,7 @@ struct ipa_key
 	float fam_dissimilarity;
 	float class_dissimilarity;
 	std::vector<glyph_t> characters;
+	std::vector<std::string> characters_str;
 	// The difference in index in children vector implies their similarity
 	bool index_similar;
 };
@@ -34,8 +37,8 @@ extern ipa_key* root;
 bool init_keys(const char* fname);
 void destroy_keys();
 
-// Returns a vector of glyphs sorted by size
-std::vector<glyph_t> sorted_keys();
+// Gets the hash value for a glyph character
+glyph_t glyph_char_hash(const glyph_char_t&);
 
 // Strips useless valid IPA glyphs from the provided string
 std::string glyph_strip(const std::string&);
@@ -43,9 +46,8 @@ std::string glyph_strip(const std::string&);
 gstring glyph_str(std::string);
 
 // Returns false if string contains unrecognizable glyphs
-// Keys need to be created with sorted_keys()
-// str is the string to look up
-bool glyph_try_str(std::vector<glyph_t> keys, std::string str, gstring& result);
+// str is the string to translate
+bool glyph_try_str(std::string str, gstring& result);
 
 }/* namespace ipa */
 

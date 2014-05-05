@@ -50,7 +50,7 @@ bool gen_pun(
 		std::string& output
 		)
 {
-	const auto& selected_word_pronuns = sentence[rand_seed % sentence.size()];
+	const auto& selected_word_pronuns = sentence[sentence_pos];
 	const auto& selected_pronun =
 			selected_word_pronuns[rand_seed % selected_word_pronuns.size()];
 
@@ -58,9 +58,11 @@ bool gen_pun(
 			word_pos >= (int)selected_pronun.size())
 		return true;
 
-	const int max_tries = 5000;
+	const int max_tries = 20000;
 	const int max_recursive_tries = 5;
 	const float lower_expectations_amt = 0.025;
+
+	const float orig_max_diff = max_diff;
 
 	int tries = 0, recursive_tries = 0;
 
@@ -89,7 +91,7 @@ bool gen_pun(
 		{
 			output += random_word.word + " ";
 
-			if (gen_pun(sentence, sentence_pos, word_pos, max_diff,
+			if (gen_pun(sentence, sentence_pos, word_pos, orig_max_diff,
 					rand(), output))
 				return true;
 
@@ -149,29 +151,9 @@ bool get_glyph_string(const std::string& sentence,
 	}
 	return true;
 }
-void explain_sentence(const std::vector<pronunciations_t>& sentence_pronuns)
-{
-	for (const auto& word_pronuns : sentence_pronuns)
-	{
-		for (const auto& pronunciation : word_pronuns)
-		{
-			for (const auto& glyph : pronunciation)
-				std::cout << glyph;
-			std::cout << "\n";
-		}
-		std::cout << "\n";
-	}
-	std::cout << "\n";
 
-	ipa::gstring a;
-	int c = 0, d = 0;
-	leak(50, sentence_pronuns, c, d, rand(), a);
-	for (const auto& glyphs : a)
-		std::cout << glyphs;
-	std::cout << "\n\n";
-}
 bool play(std::string sentence, float diff_max,
-		fn_callback_t callback, bool do_test)
+		fn_callback_t callback)
 {
 	// Lower-case-ify string
 	std::transform(sentence.begin(), sentence.end(), sentence.begin(), ::tolower);
@@ -181,17 +163,26 @@ bool play(std::string sentence, float diff_max,
 	if (!get_glyph_string(sentence, sentence_pronuns))
 		return false;
 
-	if (do_test)
-		explain_sentence(sentence_pronuns);
-
 	int i_sentence = 0, i_word = 0;
 	std::string pun;
 
-	while (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max, rand(), pun) &&
-			callback(pun))
+	int retries = 0;
+
+	while (retries ++ < 5)
 	{
-		i_sentence = i_word = 0;
-		pun = "";
+		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max,
+				rand(), pun))
+		{
+			if (!callback(pun))
+				return true;
+			i_sentence = i_word = 0;
+			pun = "";
+		}
+		else
+		{
+			retries++;
+			diff_max += 0.025;
+		}
 	}
 
 	return true;

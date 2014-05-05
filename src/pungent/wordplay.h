@@ -33,7 +33,7 @@ typedef bool (*fn_callback_t)(const std::string&);
  *     the words
  */
 bool play(std::string sentence, float diff_max,
-		fn_callback_t callback = _internal_print_pun, bool do_test = false);
+		fn_callback_t callback = _internal_print_pun);
 
 } /* namespace wordplay */
 

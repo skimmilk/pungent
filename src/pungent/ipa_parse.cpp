@@ -18,6 +18,8 @@ namespace ipa{
 
 // Global root node
 ipa_key* root;
+std::vector<glyph_char_t>* sorted_glyph_chars;
+std::vector<glyph_t>* sorted_glyphs;
 
 // Will create family if not in current
 ipa_key* get_family(ipa_key* current, const std::string& family)
@@ -67,7 +69,19 @@ ipa_key* get_full_family(ipa_key* rootnode, std::string family)
 	}
 	return key;
 }
+glyph_t glyph_char_hash(const glyph_char_t& a)
+{
+	glyph_t result = 0;
+	for (const auto& c : a)
+	{
+		result *= 1099511628211;
+		result ^= (glyph_t)c;
+	}
+	return result;
+}
 
+// Function will generate the lookup tables
+void sort_keys();
 bool init_keys(const char* fname)
 {
 	root = new ipa_key();
@@ -121,10 +135,14 @@ bool init_keys(const char* fname)
 			get_full_family(root, classname)->index_similar = true;
 		}
 		else
+		{
 			// Add character to the current ipa key
-			current->characters.push_back(line);
+			current->characters.push_back(glyph_char_hash(line));
+			current->characters_str.push_back(line);
+		}
 	}
-	root->class_dissimilarity = 1.5f;
+	root->class_dissimilarity = 1.f;
+	sort_keys();
 	return true;
 }
 
@@ -139,18 +157,20 @@ void destroy_keys()
 {
 	destroy_key(root);
 	root = nullptr;
+	delete ipa::sorted_glyph_chars;
+	delete ipa::sorted_glyphs;
 }
 
 std::string glyph_strip(const std::string& glyphs)
 {
 	// Strip stresses and unusable characters
-	std::vector<glyph_t> unusable {"-", "̩", "ˈ","ː","ˑ",".","(",")","'","ˌ"};
+	std::vector<glyph_char_t> unusable {"-", "̩", "ˈ","ː","ˑ",".","(",")","'","ˌ"};
 	std::string tmp = glyphs;
 	std::string result;
 	while (true)
 	{
 		bool switched = false;
-		for (const glyph_t& a : unusable)
+		for (const glyph_char_t& a : unusable)
 		{
 			if (!tmp.size())
 				return result;
@@ -174,20 +194,21 @@ std::string glyph_strip(const std::string& glyphs)
 // Glyphs is the array of recognizable glyphs sorted by size
 // Failed is set if there is unrecognizable glyphs in the string
 // Returns true if there is more parsable glyphs in the string
-bool glyph_next(const std::vector<glyph_t>& glyphs,
-		std::string& str, glyph_t& glyph, bool& failed)
+bool glyph_next(std::string& str, glyph_t& glyph, bool& failed)
 {
 	if (str.size() == 0)
 		return false;
 
-	for (const glyph_t& a : glyphs)
+	int i = 0;
+	for (const glyph_char_t& a : *sorted_glyph_chars)
 	{
 		if (str.compare(0, a.size(), a) == 0)
 		{
-			glyph = a;
+			glyph = sorted_glyphs->at(i);
 			str = str.substr(a.size());
 			return true;
 		}
+		i++;
 	}
 	failed = true;
 	return false;
@@ -196,12 +217,10 @@ gstring glyph_str(std::string str)
 {
 	gstring result;
 	glyph_t glyph;
-	// Glyphs sorted by size
-	std::vector<glyph_t> sorted_size = sorted_keys();
 	bool failed = false;
 	str = glyph_strip(str);
 
-	while (glyph_next(sorted_size, str, glyph, failed))
+	while (glyph_next(str, glyph, failed))
 		result.push_back(glyph);
 
 	if (failed)
@@ -213,52 +232,68 @@ gstring glyph_str(std::string str)
 // Returns false if string contains unrecognizable glyphs
 // Keys need to be created with sorted_keys()
 // str is the string to look up
-bool glyph_try_str(std::vector<glyph_t> keys, std::string str, gstring& result)
+bool glyph_try_str(std::string str, gstring& result)
 {
 	bool failed = false;
 	glyph_t glyph;
 
 	str = glyph_strip(str);
 
-	while (glyph_next(keys, str, glyph, failed))
+	while (glyph_next(str, glyph, failed))
 		result.push_back(glyph);
 
 	return !failed;
 }
 
-void add_glyph(std::vector<glyph_t>& vec, const glyph_t& toadd)
+// Insertion sort based on the size of glyph character
+void add_glyph(
+		std::vector<glyph_char_t>& gchars,
+		std::vector<glyph_t>& glyphs,
+		const glyph_char_t& gchar_toadd,
+		const glyph_t& glyph_toadd)
 {
-	if (std::find(vec.begin(), vec.end(), toadd) == vec.end())
+	if (std::find(glyphs.begin(), glyphs.end(), glyph_toadd) == glyphs.end())
 	{
-		auto siz = vec.size();
+		auto siz = glyphs.size();
 		bool inserted = false;
 
 		for (size_t i = 0; i < siz; i++)
-			if (vec[i].size() < toadd.size())
+			if (gchars[i].size() < gchar_toadd.size())
 			{
-				vec.insert(vec.begin() + i, toadd);
+				gchars.insert(gchars.begin() + i, gchar_toadd);
+				glyphs.insert(glyphs.begin() + i, glyph_toadd);
 				inserted = true;
 				break;
 			}
 
 		if (!inserted)
-			vec.push_back(toadd);
+		{
+			gchars.push_back(gchar_toadd);
+			glyphs.push_back(glyph_toadd);
+		}
 	}
 }
-void add_key_glyphs(std::vector<glyph_t>& vec, ipa_key* key)
+void add_key_glyphs(
+		std::vector<glyph_char_t>& gchars,
+		std::vector<glyph_t>& glyphs,
+		ipa_key* key)
 {
 	for (auto a : key->children)
-		add_key_glyphs(vec, a);
+		add_key_glyphs(gchars, glyphs, a);
 
-	for (const auto& a : key->characters)
-		add_glyph(vec, a);
+	int i = 0;
+	for (const auto& a : key->characters_str)
+	{
+		add_glyph(gchars, glyphs, a, key->characters[i]);
+		i++;
+	}
 }
 
-std::vector<glyph_t> sorted_keys()
+void sort_keys()
 {
-	std::vector<glyph_t> ret;
-	add_key_glyphs(ret, root);
-	return ret;
+	sorted_glyph_chars = new std::vector<glyph_char_t>();
+	::ipa::sorted_glyphs = new std::vector<glyph_t>();
+	add_key_glyphs(*sorted_glyph_chars, *sorted_glyphs, root);
 }
 
 }/* namespace ipa */
