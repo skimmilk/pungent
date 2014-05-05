@@ -166,9 +166,7 @@ bool play(std::string sentence, float diff_max,
 	int i_sentence = 0, i_word = 0;
 	std::string pun;
 
-	int retries = 0;
-
-	while (retries < 5)
+	while (true)
 	{
 		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max,
 				rand(), pun))
@@ -177,11 +175,6 @@ bool play(std::string sentence, float diff_max,
 				return true;
 			i_sentence = i_word = 0;
 			pun = "";
-		}
-		else
-		{
-			retries++;
-			diff_max += 0.025;
 		}
 	}
 

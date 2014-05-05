@@ -7,57 +7,105 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <string.h>
+#include <argp.h>
 #include "ipa_parse.h"
 #include "diff.h"
 #include "dict_parse.h"
 #include "wordplay.h"
 
-void test_pun();
-
-int main(int, char**)
+struct pungent_state
 {
-	test_pun();
+	char* sentence;
+	int pun_num;
+	int verbose;
+	int seed;
+};
+
+struct pungent_state* punstate;
+
+void run_pun(pungent_state*);
+static error_t parse_opt(int key, char* arg, struct argp_state* state);
+
+static char doc[] =
+  "pungent - generate sentences that sound alike";
+static char args_doc[] = "SENTENCE";
+static struct argp_option options[] = {
+		{"verbose",		'v', 0, 0, "Produce verbose output", 0},
+		{"num-puns",	'n', "number", 0, "Produce N puns, -1 for never-ending", 0},
+		{"rand-seed",	's', "number", 0, "Random seed to use in generation", 0},
+		// The things I do to silence compiler warnings...
+		{ 0, 0, 0, 0, 0, 0}
+};
+static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0};
+int main(int argc, char** argv)
+{
+	pungent_state args;
+	punstate = &args;
+	memset(&args, 0, sizeof(pungent_state));
+
+	argp_parse(&argp, argc, argv, 0, 0, &args);
+	run_pun(&args);
 	return 0;
 }
 
-static int prints_done = 0;
 bool print_pun(const std::string& str)
 {
+	static int prints_done = 0;
 	std::cout << str << "\n";
-	if (++prints_done == 10)
-	{
-		prints_done = 0;
+
+	if (punstate->pun_num != 0 && ++prints_done == punstate->pun_num)
 		return false;
-	}
+
 	return true;
 }
-void test_pun()
+void run_pun(pungent_state* state)
 {
-	std::cerr << "Loading dictionary...\n";
+	if (state->verbose)
+		std::cerr << "Loading dictionary...\n";
 	if (!wordplay::init("res/ipa_dict", "res/wordlist2"))
 	{
 		std::cerr << "Error loading files\n";
 		return;
 	}
-	std::cerr << "Done\n\n";
-
-	srand(time(0));
-
-	std::cout << "Testing pun...\n";
-	wordplay::play("technology", 0.06, print_pun);
-	std::cout << "Done\n\n";
-
-	prints_done = 0;
-
-	std::string line;
-	while (std::getline(std::cin, line))
-	{
-		std::cerr << "Playing with words...\n";
-		if (!wordplay::play(line, 0.06, print_pun))
-			std::cout << "Couldn't find a pronunciation for one of the words\n";
+	if (state->verbose)
 		std::cerr << "Done\n\n";
-		prints_done = 0;
-	}
+
+	int seed = state->seed ? state->seed : time(NULL);
+	srand(seed);
+
+	wordplay::play(state->sentence, 0.06, print_pun);
+
+	if (state->verbose)
+		std::cerr << "Done\n\n";
 
 	wordplay::destroy();
+}
+error_t parse_opt (int key, char* arg, struct argp_state* state)
+{
+	pungent_state* punstate = (pungent_state*)state->input;
+	switch (key)
+	{
+	case 'n':
+		punstate->pun_num = atoi(arg);
+		break;
+	case 'v':
+		punstate->verbose = 1;
+		break;
+	case 's':
+		punstate->seed = atoi(arg);
+		break;
+	case ARGP_KEY_ARG:
+		if (state->arg_num > 1)
+			argp_usage(state);
+		punstate->sentence = arg;
+		break;
+	case ARGP_KEY_END:
+		if (state->arg_num < 1)
+			argp_usage(state);
+		break;
+	default:
+		return ARGP_ERR_UNKNOWN;
+	}
+	return 0;
 }
