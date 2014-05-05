@@ -168,7 +168,7 @@ bool play(std::string sentence, float diff_max,
 
 	int retries = 0;
 
-	while (retries ++ < 5)
+	while (retries < 5)
 	{
 		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max,
 				rand(), pun))
@@ -194,6 +194,7 @@ bool init(const char* ipa_file, const char* words_file)
 		std::cerr << "Error loading ipa glyphs\n";
 		return false;
 	}
+	ipa::init_diff();
 	if (!dict::init_dict(words_file))
 	{
 		std::cerr << "Error loading wordlist\n";
@@ -204,6 +205,7 @@ bool init(const char* ipa_file, const char* words_file)
 void destroy()
 {
 	ipa::destroy_keys();
+	ipa::destroy_diff();
 	dict::destroy_dict();
 }
 bool _internal_print_pun(const std::string& str)
