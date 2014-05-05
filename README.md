@@ -4,20 +4,20 @@
 ## What it does
 The program tries to do wordplay with sentences and output sentences that sound alike.
 
-Example (unedited!) output with 'technology':
+Example (unedited!) output with 'vanilla wafer':
 ```
-technology
+vanilla wafer 
 Playing with words...
-teh k gnaw le 
-keck 'n ology 
-tut toches gnaw la psi 
-peck knowledge ea 
-tid null it rie 
-teek gnaw le qi 
-tape nu 
-tp mole dew 
-tuque n ul ik fi 
-cake noll 
+v 'm allah yea ze 
+vernal erasure 
+w erne allah weigh f 
+'ve earn alla heighth o' 
+vannes allah wye f 
+hun ill erase o' 
+vernal away f a 
+v am ill erasure 
+them eel a rats if o' 
+vanilla wythe o' 
 Done
 ```
 ## How it does it
