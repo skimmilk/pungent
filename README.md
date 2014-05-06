@@ -4,10 +4,8 @@
 ## What it does
 The program tries to do wordplay with sentences and output sentences that sound alike.
 
-Example (unedited!) output with 'vanilla wafer':
+Example (unedited!) output with `./pungent -n 10 'vanilla wafer'`
 ```
-vanilla wafer 
-Playing with words...
 v 'm allah yea ze 
 vernal erasure 
 w erne allah weigh f 
@@ -18,7 +16,6 @@ vernal away f a
 v am ill erasure 
 them eel a rats if o' 
 vanilla wythe o' 
-Done
 ```
 ## How it does it
 The program understands how words are pronounced based on the International Phonetic Alphabet (IPA) spelling of all words Wiktionary has provided.
