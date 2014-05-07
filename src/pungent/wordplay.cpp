@@ -45,7 +45,9 @@ bool gen_pun(
 		const std::vector<pronunciations_t>& sentence,
 		int& sentence_pos,
 		int& word_pos,
-		float max_diff,
+		const float& starting_diff,
+		const float& max_diff,
+		const float& delta_diff,
 		int rand_seed,
 		std::string& output
 		)
@@ -59,19 +61,17 @@ bool gen_pun(
 		return true;
 
 	const int max_tries = 20000;
-	const int max_recursive_tries = 5;
-	const float lower_expectations_amt = 0.025;
 
-	const float orig_max_diff = max_diff;
+	float current_diff = starting_diff;
 
-	int tries = 0, recursive_tries = 0;
+	int tries = 0;
 
 	// Reset positions to these if the random word does not match these
 	int prev_spos = sentence_pos, prev_wpos = word_pos;
 	const std::string old_output = output;
 
 	// Keep trying to find a random word
-	while (tries++ < max_tries && recursive_tries < max_recursive_tries)
+	while (tries++ < max_tries && current_diff < max_diff)
 	{
 		// Insert a word and see if it fits into the sentence well
 		const dict::dict_entry& random_word = dict::random_word();
@@ -91,15 +91,14 @@ bool gen_pun(
 		{
 			output += random_word.word + " ";
 
-			if (gen_pun(sentence, sentence_pos, word_pos, orig_max_diff,
-					rand(), output))
+			if (gen_pun(sentence, sentence_pos, word_pos,
+					starting_diff, max_diff, delta_diff, rand(), output))
 				return true;
 
 			// Failed to generate a pun with these parameters
 			// Lower required similarity levels
 			output = old_output;
-			max_diff += lower_expectations_amt;
-			recursive_tries++;
+			current_diff += delta_diff;
 		}
 
 		sentence_pos = prev_spos;
@@ -152,11 +151,13 @@ bool get_glyph_string(const std::string& sentence,
 	return true;
 }
 
-bool play(std::string sentence, float diff_max,
+bool play(std::string sentence,
+		float diff_start, float diff_max, float delta_diff,
 		fn_callback_t callback)
 {
 	// Lower-case-ify string
-	std::transform(sentence.begin(), sentence.end(), sentence.begin(), ::tolower);
+	std::transform(sentence.begin(), sentence.end(), sentence.begin(),
+			::tolower);
 
 	// Get the pronunciations of all words in the sentence
 	std::vector<pronunciations_t> sentence_pronuns;
@@ -168,8 +169,8 @@ bool play(std::string sentence, float diff_max,
 
 	while (true)
 	{
-		if (gen_pun(sentence_pronuns, i_sentence, i_word, diff_max,
-				rand(), pun))
+		if (gen_pun(sentence_pronuns, i_sentence, i_word,
+				diff_start, diff_max, delta_diff, rand(), pun))
 		{
 			if (!callback(pun))
 				return true;
