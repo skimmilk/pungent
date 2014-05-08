@@ -76,7 +76,7 @@ bool gen_pun(
 		// Insert a word and see if it fits into the sentence well
 		const dict::dict_entry& random_word = dict::random_word();
 		const ipa::gstring& random_pronun =
-				random_word.ipa[rand_seed % random_word.ipa.size()];
+				random_word.ipa[rand() % random_word.ipa.size()];
 
 		if (random_pronun.size() == 0)
 			continue;
