@@ -38,12 +38,12 @@ static struct argp_option options[] = {
 		{"rand-seed",	's', "NUMBER", 0,
 				"Random seed to use in generation", 0},
 		{"diff-max",	'm', "NUMBER", 0,
-				"Maximum allowable difference (Default 0.16)", 0},
+				"Maximum allowable difference (Default 0.08)", 0},
 		{"diff-min",	'd', "NUMBER", 0,
-				"Starting allowable difference (Default 0.06)", 0},
+				"Starting allowable difference (Default 0.02)", 0},
 		{"diff-change",	'c', "NUMBER", 0,
 				"Amount to change allowable sentence difference"
-				" on failure to find pun (Default 0.05)", 0},
+				" on failure to find pun (Default 0.01)", 0},
 		// The things I do to silence compiler warnings...
 		{ 0, 0, 0, 0, 0, 0}
 };
@@ -53,9 +53,9 @@ int main(int argc, char** argv)
 	pungent_state args;
 	punstate = &args;
 	memset(&args, 0, sizeof(pungent_state));
-	args.max = 0.16;
-	args.starting = 0.06;
-	args.delta = 0.05;
+	args.max = 0.05;
+	args.starting = 0.01;
+	args.delta = 0.01;
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 	run_pun(&args);
