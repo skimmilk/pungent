@@ -231,8 +231,11 @@ bool permutate_pronunciations(const std::vector<pronunciations_t>& prons,
 		int i_pron = 0, ipa::gstring sentence_pron = ipa::gstring())
 {
 	if (i_pron == (int)prons.size())
+	{
 		if (!gen_pun_sequential(sentence_pron, delta_max, callback))
 			return false;
+		return true;
+	}
 
 	const ipa::gstring old = sentence_pron;
 	for (const ipa::gstring& pron : prons[i_pron])
