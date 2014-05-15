@@ -188,15 +188,14 @@ bool play(std::string sentence,
 	return true;
 }
 
-void gen_pun_sequential(const ipa::gstring& sentence_pron,
+// Return false to stop processing
+// Return true to keep processing
+bool gen_pun_sequential(const ipa::gstring& sentence_pron,
 		float delta_max, fn_callback_t callback,
-		size_t glyph_pos = 1, std::string result = {0})
+		size_t glyph_pos = 0, std::string result = {0})
 {
 	if (glyph_pos >= sentence_pron.size())
-	{
-		callback(result);
-		return;
-	}
+		return callback(result);
 
 	for (const auto& entry : *dict::entries)
 	{
@@ -204,39 +203,47 @@ void gen_pun_sequential(const ipa::gstring& sentence_pron,
 		{
 			if (pronunciation.size() == 0)
 				continue;
+
 			size_t size = std::min(glyph_pos + pronunciation.size(),
 					sentence_pron.size());
+
 			if (ipa::glyphstring_diff(
 					pronunciation,
-					ipa::gstring (sentence_pron.begin() + glyph_pos,
-							sentence_pron.begin() + size))
+					ipa::gstring (
+							&sentence_pron[glyph_pos], &sentence_pron[size]))
 				< delta_max)
 			{
-				gen_pun_sequential(sentence_pron, delta_max, callback,
-						glyph_pos + pronunciation.size(), result + entry.word + " ");
+				if (!gen_pun_sequential(sentence_pron, delta_max, callback,
+						glyph_pos + pronunciation.size(),
+						result + entry.word + " "))
+					return false;
 			}
 		}
 	}
+	return true;
 }
 
 // Go through every permutation of possible pronunciations of the sentence
 // Pretty much a nested for loop
 // for (a : prons[0]) for (b : prons[1]) ...
-void permutate_pronunciations(const std::vector<pronunciations_t>& prons,
+bool permutate_pronunciations(const std::vector<pronunciations_t>& prons,
 		const float delta_max, const fn_callback_t callback,
-		int i_pron = 0, ipa::gstring sentence_pron = {0})
+		int i_pron = 0, ipa::gstring sentence_pron = ipa::gstring())
 {
 	if (i_pron == (int)prons.size())
-		gen_pun_sequential(sentence_pron, delta_max, callback);
+		if (!gen_pun_sequential(sentence_pron, delta_max, callback))
+			return false;
 
 	const ipa::gstring old = sentence_pron;
 	for (const ipa::gstring& pron : prons[i_pron])
 	{
 		sentence_pron.insert(sentence_pron.end(), pron.begin(), pron.end());
-		permutate_pronunciations(prons, delta_max, callback, i_pron + 1,
-				sentence_pron);
+		if (!permutate_pronunciations(prons, delta_max, callback, i_pron + 1,
+				sentence_pron))
+			return false;
 		sentence_pron = old;
 	}
+	return true;
 }
 bool play_sequential(std::string sentence, float delta_max,
 		fn_callback_t callback)
