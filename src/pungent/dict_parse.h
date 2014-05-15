@@ -17,6 +17,7 @@ struct dict_entry
 	std::string word;
 	std::vector<ipa::gstring> ipa;
 };
+extern std::vector<dict_entry>* entries;
 
 // Initialize the dictionary
 bool init_dict(const char* fname, bool logerr = false);

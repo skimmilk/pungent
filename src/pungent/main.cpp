@@ -21,6 +21,7 @@ struct pungent_state
 	int verbose;
 	int seed;
 	float max, starting, delta;
+	bool sequential;
 };
 
 struct pungent_state* punstate;
@@ -35,7 +36,7 @@ static struct argp_option options[] = {
 		{"verbose",		'v', 0, 0, "Produce verbose output", 0},
 		{"num-puns",	'n', "NUMBER", 0,
 				"Produce N puns, -1 for never-ending", 0},
-		{"rand-seed",	's', "NUMBER", 0,
+		{"rand-seed",	1338, "NUMBER", 0,
 				"Random seed to use in generation", 0},
 		{"diff-max",	'm', "NUMBER", 0,
 				"Maximum allowable difference (Default 0.08)", 0},
@@ -44,6 +45,9 @@ static struct argp_option options[] = {
 		{"diff-change",	'c', "NUMBER", 0,
 				"Amount to change allowable sentence difference"
 				" on failure to find pun (Default 0.01)", 0},
+		{"sequential",	's', 0, 0,
+				"Produce all puns by systematically going through word list",
+				0},
 		// The things I do to silence compiler warnings...
 		{ 0, 0, 0, 0, 0, 0}
 };
@@ -87,8 +91,11 @@ void run_pun(pungent_state* state)
 	int seed = state->seed ? state->seed : time(NULL);
 	srand(seed);
 
-	wordplay::play(state->sentence,
-			state->starting, state->max, state->delta, print_pun);
+	if (state->sequential)
+		wordplay::play_sequential(state->sentence, state->max, print_pun);
+	else
+		wordplay::play(state->sentence,
+				state->starting, state->max, state->delta, print_pun);
 
 	if (state->verbose)
 		std::cerr << "Done\n\n";
@@ -106,7 +113,7 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 	case 'v':
 		punstate->verbose = 1;
 		break;
-	case 's':
+	case 1338:
 		punstate->seed = atoi(arg);
 		break;
 	case 'm':
@@ -117,6 +124,9 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 		break;
 	case 'c':
 		punstate->delta = atof(arg);
+		break;
+	case 's':
+		punstate->sequential = true;
 		break;
 	case ARGP_KEY_ARG:
 		if (state->arg_num > 1)

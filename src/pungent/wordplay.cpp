@@ -151,17 +151,23 @@ bool get_glyph_string(const std::string& sentence,
 	return true;
 }
 
-bool play(std::string sentence,
-		float diff_start, float diff_max, float delta_diff,
-		fn_callback_t callback)
+bool get_pronunciations(std::string& sentence,
+		std::vector<pronunciations_t>& pron)
 {
 	// Lower-case-ify string
 	std::transform(sentence.begin(), sentence.end(), sentence.begin(),
 			::tolower);
 
 	// Get the pronunciations of all words in the sentence
+	return get_glyph_string(sentence, pron);
+}
+
+bool play(std::string sentence,
+		float diff_start, float diff_max, float delta_diff,
+		fn_callback_t callback)
+{
 	std::vector<pronunciations_t> sentence_pronuns;
-	if (!get_glyph_string(sentence, sentence_pronuns))
+	if (!get_pronunciations(sentence, sentence_pronuns))
 		return false;
 
 	int i_sentence = 0, i_word = 0;
@@ -179,6 +185,67 @@ bool play(std::string sentence,
 		}
 	}
 
+	return true;
+}
+
+void gen_pun_sequential(const ipa::gstring& sentence_pron,
+		float delta_max, fn_callback_t callback,
+		size_t glyph_pos = 1, std::string result = {0})
+{
+	if (glyph_pos >= sentence_pron.size())
+	{
+		callback(result);
+		return;
+	}
+
+	for (const auto& entry : *dict::entries)
+	{
+		for (const auto& pronunciation : entry.ipa)
+		{
+			if (pronunciation.size() == 0)
+				continue;
+			size_t size = std::min(glyph_pos + pronunciation.size(),
+					sentence_pron.size());
+			if (ipa::glyphstring_diff(
+					pronunciation,
+					ipa::gstring (sentence_pron.begin() + glyph_pos,
+							sentence_pron.begin() + size))
+				< delta_max)
+			{
+				gen_pun_sequential(sentence_pron, delta_max, callback,
+						glyph_pos + pronunciation.size(), result + entry.word + " ");
+			}
+		}
+	}
+}
+
+// Go through every permutation of possible pronunciations of the sentence
+// Pretty much a nested for loop
+// for (a : prons[0]) for (b : prons[1]) ...
+void permutate_pronunciations(const std::vector<pronunciations_t>& prons,
+		const float delta_max, const fn_callback_t callback,
+		int i_pron = 0, ipa::gstring sentence_pron = {0})
+{
+	if (i_pron == (int)prons.size())
+		gen_pun_sequential(sentence_pron, delta_max, callback);
+
+	const ipa::gstring old = sentence_pron;
+	for (const ipa::gstring& pron : prons[i_pron])
+	{
+		sentence_pron.insert(sentence_pron.end(), pron.begin(), pron.end());
+		permutate_pronunciations(prons, delta_max, callback, i_pron + 1,
+				sentence_pron);
+		sentence_pron = old;
+	}
+}
+bool play_sequential(std::string sentence, float delta_max,
+		fn_callback_t callback)
+{
+	std::vector<pronunciations_t> sentence_pronuns;
+	if (!get_pronunciations(sentence, sentence_pronuns))
+		return false;
+
+	permutate_pronunciations(sentence_pronuns, delta_max, callback);
 	return true;
 }
 bool init(const char* ipa_file, const char* words_file)

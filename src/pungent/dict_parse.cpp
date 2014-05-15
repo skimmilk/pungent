@@ -14,7 +14,7 @@
 
 namespace dict{
 
-// Static dictionary of words only this file can access
+// Static dictionary of words
 std::vector<dict_entry>* entries;
 
 const dict_entry& random_word()
