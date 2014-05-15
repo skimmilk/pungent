@@ -192,7 +192,7 @@ bool play(std::string sentence,
 // Return true to keep processing
 bool gen_pun_sequential(const ipa::gstring& sentence_pron,
 		float delta_max, fn_callback_t callback,
-		size_t glyph_pos = 0, std::string result = {0})
+		size_t glyph_pos = 0, std::string result = std::string ())
 {
 	if (glyph_pos >= sentence_pron.size())
 		return callback(result);
