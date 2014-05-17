@@ -210,7 +210,7 @@ bool print_puns(size_t position, fn_callback_t callback, std::string base)
 		return callback(base);
 
 	for (const auto& a : generated_puns->at(position))
-		if (!print_puns(position + base.size(), callback, base + a + " "))
+		if (!print_puns(position + a.size(), callback, base + a + " "))
 			return false;
 	return true;
 }
@@ -221,6 +221,7 @@ bool gen_pun_sequential(const ipa::gstring& sentence_pron,
 		float delta_max, fn_callback_t callback,
 		size_t glyph_pos = 0, std::string result = std::string ())
 {
+	// Print puns that won't be caught by print_puns
 	if (glyph_pos >= sentence_pron.size())
 		return callback(result);
 	if (has_puns(glyph_pos))
