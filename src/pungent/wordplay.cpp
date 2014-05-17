@@ -266,7 +266,8 @@ bool gen_pun_sequential(const ipa::gstring& sentence_pron,
 // for (a : prons[0]) for (b : prons[1]) ...
 bool permutate_pronunciations(const std::vector<pronunciations_t>& prons,
 		const float delta_max, const fn_callback_t callback,
-		int i_pron = 0, ipa::gstring sentence_pron = ipa::gstring())
+		bool permute, int i_pron = 0,
+		ipa::gstring sentence_pron = ipa::gstring())
 {
 	if (i_pron == (int)prons.size())
 	{
@@ -274,28 +275,30 @@ bool permutate_pronunciations(const std::vector<pronunciations_t>& prons,
 		auto ret = gen_pun_sequential(sentence_pron, delta_max, callback);
 		delete generated_puns;
 
-		return ret;
+		if (permute)
+			return ret;
+		return false;
 	}
 
 	const ipa::gstring old = sentence_pron;
 	for (const ipa::gstring& pron : prons[i_pron])
 	{
 		sentence_pron.insert(sentence_pron.end(), pron.begin(), pron.end());
-		if (!permutate_pronunciations(prons, delta_max, callback, i_pron + 1,
-				sentence_pron))
+		if (!permutate_pronunciations(prons, delta_max, callback, permute,
+				i_pron + 1, sentence_pron))
 			return false;
 		sentence_pron = old;
 	}
 	return true;
 }
-bool play_sequential(std::string sentence, float delta_max,
+bool play_sequential(std::string sentence, float delta_max, bool permute,
 		fn_callback_t callback)
 {
 	std::vector<pronunciations_t> sentence_pronuns;
 	if (!get_pronunciations(sentence, sentence_pronuns))
 		return false;
 
-	permutate_pronunciations(sentence_pronuns, delta_max, callback);
+	permutate_pronunciations(sentence_pronuns, delta_max, callback, permute);
 	return true;
 }
 bool init(const char* ipa_file, const char* words_file)

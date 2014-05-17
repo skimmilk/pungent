@@ -22,6 +22,7 @@ struct pungent_state
 	int seed;
 	float max, starting, delta;
 	bool sequential;
+	bool permute;
 };
 
 struct pungent_state* punstate;
@@ -49,7 +50,17 @@ static struct argp_option options[] = {
 		{"diff-max",	'm', "NUMBER", 0,
 				"Maximum allowable difference (Default 0.08)", 0},
 
-		{0,0,0,0, "Random output settings:", 0},
+		{0,0,0,0, "Sequential pun search settings:", 0},
+
+		{"no-permute",	'1', 0, 0,
+				"Don't go through all permutations of possible "
+				"permutations of pronunciations in the sentence", 0},
+
+		{"permute",		'p', 0, 0,
+				"Go through all permutations of possible pronunciations "
+				"of the sentence", 0},
+
+		{0,0,0,0, "Random pun search settings:", 0},
 
 		{"rand-seed",	1338, "NUMBER", 0,
 				"Random seed to use in generation", 0},
@@ -105,7 +116,8 @@ void run_pun(pungent_state* state)
 	srand(seed);
 
 	if (state->sequential)
-		wordplay::play_sequential(state->sentence, state->max, print_pun);
+		wordplay::play_sequential(state->sentence, state->max, state->permute,
+				print_pun);
 	else
 		wordplay::play(state->sentence,
 				state->starting, state->max, state->delta, print_pun);
@@ -146,6 +158,12 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 		break;
 	case 'r':
 		punstate->sequential = false;
+		break;
+	case '1':
+		punstate->permute = false;
+		break;
+	case 'p':
+		punstate->permute = true;
 		break;
 	case ARGP_KEY_ARG:
 		if (state->arg_num > 1)
