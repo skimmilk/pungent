@@ -17,6 +17,8 @@
 struct pungent_state
 {
 	char* sentence;
+	const char* ipa;
+	const char* wordlist;
 	int pun_num;
 	int verbose;
 	int seed;
@@ -40,14 +42,20 @@ static struct argp_option options[] = {
 		{"num-puns",	'n', "NUMBER", 0,
 				"Produce N puns, 0 for never-ending (Default 0)", 0},
 
-		{"random",		'r', 0, 0, "Randomly produce puns", 0},
-
 		{"diff-max",	'm', "NUMBER", 0,
 				"Maximum allowable difference (Default 0.05)", 0},
 
+		{"ipa",			'i', "FILE", 0,
+				"Path to the IPA glyph definitions "
+				"(Default res/ipa_dict)", 0},
+
+		{"wordlist",	'w', "FILE", 0,
+				"Path to the wordlist and pronunciation definitions "
+				"(Default res/wordlist2)", 0},
+
 		{"no-permute",	'1', 0, 0,
 				"Don't go through all permutations of possible "
-				"pronunciations in the sentence", 0},
+				"pronunciations of the sentence", 0},
 
 		{"permute",		'p', 0, 0,
 				"Go through all permutations of possible pronunciations "
@@ -63,6 +71,9 @@ int main(int argc, char** argv)
 	punstate = &args;
 	memset(&args, 0, sizeof(pungent_state));
 	args.max = 0.05;
+	args.ipa = "res/ipa_dict";
+	args.wordlist = "res/wordlist2";
+
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 	run_pun(&args);
 	return 0;
@@ -82,7 +93,7 @@ void run_pun(pungent_state* state)
 {
 	if (state->verbose)
 		std::cerr << "Loading dictionary...\n";
-	if (!wordplay::init("res/ipa_dict", "res/wordlist2"))
+	if (!wordplay::init(punstate->ipa, punstate->wordlist))
 	{
 		std::cerr << "Error loading files\n";
 		return;
@@ -106,6 +117,12 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 	pungent_state* punstate = (pungent_state*)state->input;
 	switch (key)
 	{
+	case 'i':
+		punstate->ipa = arg;
+		break;
+	case 'w':
+		punstate->wordlist = arg;
+		break;
 	case 'n':
 		punstate->pun_num = atoi(arg);
 		break;
@@ -114,9 +131,6 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 		break;
 	case 512:
 		punstate->verbose = 0;
-		break;
-	case 1338:
-		punstate->seed = atoi(arg);
 		break;
 	case 'm':
 		punstate->max = atof(arg);
