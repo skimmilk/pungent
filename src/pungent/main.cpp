@@ -34,22 +34,34 @@ static char doc[] =
 static char args_doc[] = "SENTENCE";
 static struct argp_option options[] = {
 		{"verbose",		'v', 0, 0, "Produce verbose output", 0},
+
+		{"silent",		512, 0, 0, "Don't output anything but puns (Default)", 0},
+
 		{"num-puns",	'n', "NUMBER", 0,
-				"Produce N puns, -1 for never-ending", 0},
-		{"rand-seed",	1338, "NUMBER", 0,
-				"Random seed to use in generation", 0},
+				"Produce N puns, 0 for never-ending (Default 0)", 0},
+
+		{"random",		'r', 0, 0, "Randomly produce puns", 0},
+
+		{"sequential",	's', 0, 0,
+				"Produce all possible puns by systematically"
+				" going through word list (Default)",	0},
+
 		{"diff-max",	'm', "NUMBER", 0,
 				"Maximum allowable difference (Default 0.08)", 0},
+
+		{0,0,0,0, "Random output settings:", 0},
+
+		{"rand-seed",	1338, "NUMBER", 0,
+				"Random seed to use in generation", 0},
+
 		{"diff-min",	'd', "NUMBER", 0,
 				"Starting allowable difference (Default 0.02)", 0},
+
 		{"diff-change",	'c', "NUMBER", 0,
 				"Amount to change allowable sentence difference"
 				" on failure to find pun (Default 0.01)", 0},
-		{"sequential",	's', 0, 0,
-				"Produce all puns by systematically going through word list",
-				0},
 		// The things I do to silence compiler warnings...
-		{ 0, 0, 0, 0, 0, 0}
+		{0,0,0,0,0,0}
 };
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0};
 int main(int argc, char** argv)
@@ -60,6 +72,7 @@ int main(int argc, char** argv)
 	args.max = 0.05;
 	args.starting = 0.01;
 	args.delta = 0.01;
+	args.sequential = true;
 
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 	run_pun(&args);
@@ -113,6 +126,9 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 	case 'v':
 		punstate->verbose = 1;
 		break;
+	case 512:
+		punstate->verbose = 0;
+		break;
 	case 1338:
 		punstate->seed = atoi(arg);
 		break;
@@ -127,6 +143,9 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 		break;
 	case 's':
 		punstate->sequential = true;
+		break;
+	case 'r':
+		punstate->sequential = false;
 		break;
 	case ARGP_KEY_ARG:
 		if (state->arg_num > 1)
