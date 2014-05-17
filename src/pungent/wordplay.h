@@ -32,10 +32,6 @@ typedef bool (*fn_callback_t)(const std::string&);
  *   false if an error occurred getting the pronunciation guide for one of
  *     the words
  */
-bool play(std::string sentence,
-		float diff_starting, float diff_max, float delta,
-		fn_callback_t callback = _internal_print_pun);
-
 bool play_sequential(std::string sentence, float delta_max, bool permute,
 		fn_callback_t callback = _internal_print_pun);
 

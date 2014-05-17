@@ -17,102 +17,6 @@ namespace wordplay{
 //   so typedef'ing them away makes the code much easier to read
 typedef std::vector<ipa::gstring> pronunciations_t;
 
-// Grab some of the next glyphs in the sentence
-// Randomly select pronunciations if there are multiple ones
-void leak(int num_glyphs, const std::vector<pronunciations_t>& words,
-		int& sentence_pos, int& word_pos, int rand_seed, ipa::gstring& out)
-{
-	int pronunce_index = rand_seed % words[sentence_pos].size();
-
-	int grab_amt = std::min(num_glyphs, (int)words[sentence_pos][pronunce_index].size() - word_pos);
-	// Copy
-	for (int i = 0; i < grab_amt; i++)
-		out.push_back(
-				words[sentence_pos]
-				      [pronunce_index]
-				       [word_pos++]);
-
-	// If we ran out of glyphs
-	if (grab_amt < num_glyphs && sentence_pos != (int)words.size() - 1)
-		leak(num_glyphs - grab_amt, words, ++sentence_pos, word_pos = 0,
-				rand_seed, out);
-}
-
-// Go through the list of words
-// See if it fits well at the start of the sentence
-// Continue on with the rest of the sentence
-bool gen_pun(
-		const std::vector<pronunciations_t>& sentence,
-		int& sentence_pos,
-		int& word_pos,
-		const float& starting_diff,
-		const float& max_diff,
-		const float& delta_diff,
-		int rand_seed,
-		std::string& output
-		)
-{
-	const auto& selected_word_pronuns = sentence[sentence_pos];
-	const auto& selected_pronun =
-			selected_word_pronuns[rand_seed % selected_word_pronuns.size()];
-
-	if (sentence_pos + 1 >= (int)sentence.size() &&
-			word_pos >= (int)selected_pronun.size())
-		return true;
-
-	const int max_tries = 20000;
-
-	float current_diff = starting_diff;
-
-	int tries = 0;
-
-	// Reset positions to these if the random word does not match these
-	int prev_spos = sentence_pos, prev_wpos = word_pos;
-	const std::string old_output = output;
-
-	// Keep trying to find a random word
-	while (tries++ < max_tries && current_diff < max_diff)
-	{
-		// Insert a word and see if it fits into the sentence well
-		const dict::dict_entry& random_word = dict::random_word();
-		const ipa::gstring& random_pronun =
-				random_word.ipa[rand() % random_word.ipa.size()];
-
-		if (random_pronun.size() == 0)
-			continue;
-
-		// Get the next part of the sentence
-		ipa::gstring sentence_part;
-		leak(random_pronun.size(), sentence, sentence_pos, word_pos,
-				rand_seed,sentence_part);
-
-		// Determine if the random word fits well into the sentence
-		if (ipa::glyphstring_diff(random_pronun, sentence_part) < max_diff)
-		{
-			output += random_word.word + " ";
-
-			if (gen_pun(sentence, sentence_pos, word_pos,
-					starting_diff, max_diff, delta_diff, rand(), output))
-				return true;
-
-			// Failed to generate a pun with these parameters
-			// Lower required similarity levels
-			output = old_output;
-			current_diff += delta_diff;
-		}
-
-		sentence_pos = prev_spos;
-		word_pos = prev_wpos;
-	}
-	// If we're just one glyph away from making a complete sentence
-	//  just finish it here
-	if (prev_spos + 1 >= (int)sentence.size() &&
-			prev_wpos + 1 >= (int)selected_pronun.size())
-		return true;
-
-	return false;
-}
-
 // Turn sentence into a vector of glyph strings
 // Since each word can have multiple pronunciations,
 //  each word corresponds to a vector of glyph strings
@@ -160,32 +64,6 @@ bool get_pronunciations(std::string& sentence,
 
 	// Get the pronunciations of all words in the sentence
 	return get_glyph_string(sentence, pron);
-}
-
-bool play(std::string sentence,
-		float diff_start, float diff_max, float delta_diff,
-		fn_callback_t callback)
-{
-	std::vector<pronunciations_t> sentence_pronuns;
-	if (!get_pronunciations(sentence, sentence_pronuns))
-		return false;
-
-	int i_sentence = 0, i_word = 0;
-	std::string pun;
-
-	while (true)
-	{
-		if (gen_pun(sentence_pronuns, i_sentence, i_word,
-				diff_start, diff_max, delta_diff, rand(), pun))
-		{
-			if (!callback(pun))
-				return true;
-			i_sentence = i_word = 0;
-			pun = "";
-		}
-	}
-
-	return true;
 }
 
 // Remember these puns so they don't have to be re-computed

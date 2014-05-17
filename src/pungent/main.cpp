@@ -20,8 +20,7 @@ struct pungent_state
 	int pun_num;
 	int verbose;
 	int seed;
-	float max, starting, delta;
-	bool sequential;
+	float max;
 	bool permute;
 };
 
@@ -43,34 +42,17 @@ static struct argp_option options[] = {
 
 		{"random",		'r', 0, 0, "Randomly produce puns", 0},
 
-		{"sequential",	's', 0, 0,
-				"Produce all possible puns by systematically"
-				" going through word list (Default)",	0},
-
 		{"diff-max",	'm', "NUMBER", 0,
-				"Maximum allowable difference (Default 0.08)", 0},
-
-		{0,0,0,0, "Sequential pun search settings:", 0},
+				"Maximum allowable difference (Default 0.05)", 0},
 
 		{"no-permute",	'1', 0, 0,
 				"Don't go through all permutations of possible "
-				"permutations of pronunciations in the sentence", 0},
+				"pronunciations in the sentence", 0},
 
 		{"permute",		'p', 0, 0,
 				"Go through all permutations of possible pronunciations "
 				"of the sentence", 0},
 
-		{0,0,0,0, "Random pun search settings:", 0},
-
-		{"rand-seed",	1338, "NUMBER", 0,
-				"Random seed to use in generation", 0},
-
-		{"diff-min",	'd', "NUMBER", 0,
-				"Starting allowable difference (Default 0.02)", 0},
-
-		{"diff-change",	'c', "NUMBER", 0,
-				"Amount to change allowable sentence difference"
-				" on failure to find pun (Default 0.01)", 0},
 		// The things I do to silence compiler warnings...
 		{0,0,0,0,0,0}
 };
@@ -81,10 +63,6 @@ int main(int argc, char** argv)
 	punstate = &args;
 	memset(&args, 0, sizeof(pungent_state));
 	args.max = 0.05;
-	args.starting = 0.01;
-	args.delta = 0.01;
-	args.sequential = true;
-
 	argp_parse(&argp, argc, argv, 0, 0, &args);
 	run_pun(&args);
 	return 0;
@@ -115,12 +93,8 @@ void run_pun(pungent_state* state)
 	int seed = state->seed ? state->seed : time(NULL);
 	srand(seed);
 
-	if (state->sequential)
-		wordplay::play_sequential(state->sentence, state->max, state->permute,
-				print_pun);
-	else
-		wordplay::play(state->sentence,
-				state->starting, state->max, state->delta, print_pun);
+	wordplay::play_sequential(state->sentence, state->max, state->permute,
+			print_pun);
 
 	if (state->verbose)
 		std::cerr << "Done\n\n";
@@ -146,18 +120,6 @@ error_t parse_opt (int key, char* arg, struct argp_state* state)
 		break;
 	case 'm':
 		punstate->max = atof(arg);
-		break;
-	case 'd':
-		punstate->starting = atof(arg);
-		break;
-	case 'c':
-		punstate->delta = atof(arg);
-		break;
-	case 's':
-		punstate->sequential = true;
-		break;
-	case 'r':
-		punstate->sequential = false;
 		break;
 	case '1':
 		punstate->permute = false;
