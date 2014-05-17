@@ -4,18 +4,18 @@
 ## What it does
 The program tries to do wordplay with sentences and output sentences that sound alike.
 
-Example (unedited!) output with `./pungent -n 10 'vanilla wafer'`
+Example output ran with `./pungent "we conjure the spirits of the computer with our spells" --diff-max 0.01 | shuf | head`
 ```
-v 'm allah yea ze 
-vernal erasure 
-w erne allah weigh f 
-'ve earn alla heighth o' 
-vannes allah wye f 
-hun ill erase o' 
-vernal away f a 
-v am ill erasure 
-them eel a rats if o' 
-vanilla wythe o' 
+we conjure the 's peer it's of the computer with ou are 's pels 
+whee conjure the spear it 's of thee computer with ow are spell 's 
+whee conjure thee 's peer it's of the computer with hour 's pels 
+wi conjure the spear it 's of the computer with ow are spell 's 
+we conjure thee spear its of the computer with hour 's pels 
+wee conjure the 's peer it's of the computer wi thou are spell 's 
+whee conjure the spear it 's of the computer wi thou are 's pels 
+wee conjure the 's peer it 's of the computer with our spell 's 
+wee conjure the spear it's of the computer with hour 's pels 
+wi conjure thee 's peer it 's of the computer with hour spell 's 
 ```
 ## How it does it
 The program understands how words are pronounced based on the International Phonetic Alphabet (IPA) spelling of all words Wiktionary has provided.
