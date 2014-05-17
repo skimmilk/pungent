@@ -190,10 +190,15 @@ bool play(std::string sentence,
 
 // Remember these puns so they don't have to be re-computed
 //  in the recursive method
-std::vector<std::vector<std::string>>* generated_puns;
-void save_pun(size_t position, const std::string& pun)
+struct pun_stat
 {
-	generated_puns->at(position).push_back(pun);
+	const std::string& word;
+	int glyph_length;
+};
+std::vector<std::vector<pun_stat>>* generated_puns;
+void save_pun(size_t position, const std::string& pun, int glyph_length)
+{
+	generated_puns->at(position).push_back({pun, glyph_length});
 }
 bool has_puns(size_t position)
 {
@@ -210,7 +215,8 @@ bool print_puns(size_t position, fn_callback_t callback, std::string base)
 		return callback(base);
 
 	for (const auto& a : generated_puns->at(position))
-		if (!print_puns(position + a.size(), callback, base + a + " "))
+		if (!print_puns(position + a.glyph_length, callback,
+				base + a.word + " "))
 			return false;
 	return true;
 }
@@ -243,7 +249,7 @@ bool gen_pun_sequential(const ipa::gstring& sentence_pron,
 							&sentence_pron[glyph_pos], &sentence_pron[size]))
 				< delta_max)
 			{
-				save_pun(glyph_pos, entry.word);
+				save_pun(glyph_pos, entry.word, pronunciation.size());
 
 				if (!gen_pun_sequential(sentence_pron, delta_max, callback,
 						glyph_pos + pronunciation.size(),
@@ -264,7 +270,7 @@ bool permutate_pronunciations(const std::vector<pronunciations_t>& prons,
 {
 	if (i_pron == (int)prons.size())
 	{
-		generated_puns = new std::vector<std::vector<std::string>>();
+		generated_puns = new std::vector<std::vector<pun_stat>>();
 		auto ret = gen_pun_sequential(sentence_pron, delta_max, callback);
 		delete generated_puns;
 
