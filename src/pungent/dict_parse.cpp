@@ -116,6 +116,10 @@ bool init_dict(const char* fname, bool log)
 		if (current.ipa.size())
 			entries->push_back(current);
 	}
+	std::sort(entries->begin(), entries->end(),
+			[](const dict_entry& a, const dict_entry& b)
+			{ return a.word.size() < b.word.size(); }
+	);
 	return true;
 }
 void destroy_dict()
