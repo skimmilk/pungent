@@ -11,6 +11,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <algorithm>
+#include <stdexcept>
 
 #include "ipa_parse.h"
 
